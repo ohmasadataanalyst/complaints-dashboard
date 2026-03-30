@@ -168,11 +168,10 @@ function renderStatusDonut(data) {
     if (myChart) { myChart.dispose(); }
     myChart = echarts.init(chartDom);
 
-    // معالجة البيانات
+    // حساب البيانات
     const seenIds = new Set();
     const counts = {};
     let totalUniqueCount = 0;
-
     data.forEach(r => {
         if (!seenIds.has(r['INDEX'])) {
             const status = r['مدى الاجراء المتخذ'] || 'غير محدد';
@@ -194,40 +193,37 @@ function renderStatusDonut(data) {
         tooltip: { trigger: 'item', confine: true },
         legend: { 
             orient: 'horizontal', 
-            top: '5%', 
+            top: '2%', 
             left: 'center', 
             type: 'scroll',
-            textStyle: { color: '#ccc' },
-            // إضافة النسبة بجانب الاسم في الليجند كما طلبت سابقاً
+            textStyle: { color: '#ccc', fontSize: 10 },
             formatter: function(name) {
                 const item = chartData.find(d => d.name === name);
                 const p = totalUniqueCount > 0 ? ((item.value / totalUniqueCount) * 100).toFixed(1) : 0;
                 return `${name} (${p}%)`;
             }
         },
-        // استخدام مجموعة عناصر جرافيك لضمان التمركز الرأسي والأفقي المثالي
+        // الجرافيك ده هو اللي بيعرض الـ 9,000 والكلمة تحتها
         graphic: [
             {
                 type: 'group',
                 left: 'center',
-                top: '58%', // نفس سنتر الدائرة تقريباً
+                top: '58%', 
                 children: [
                     {
                         type: 'text',
-                        z: 100,
                         left: 'center',
                         top: 'middle',
                         style: {
                             fill: '#d32f2f',
                             text: totalUniqueCount.toLocaleString(),
-                            font: 'bold 26px sans-serif'
+                            font: 'bold 28px sans-serif'
                         }
                     },
                     {
                         type: 'text',
-                        z: 100,
                         left: 'center',
-                        top: 30, // إزاحة للأسفل تحت الرقم
+                        top: 35, 
                         style: {
                             fill: '#ccc',
                             text: 'إجمالي الحالات',
@@ -240,11 +236,14 @@ function renderStatusDonut(data) {
         series: [{
             name: 'حالة الإجراء',
             type: 'pie',
-            center: ['50%', '63%'], // ترحيل بسيط للأسفل ليعطي مساحة لليجند فوق
+            center: ['50%', '65%'], 
             radius: ['45%', '75%'],
             avoidLabelOverlap: true,
             itemStyle: { borderRadius: 8, borderColor: '#242426', borderWidth: 2 },
-            label: { show: false }, // قفلنا الـ label الأصلي عشان نعتمد على الـ graphic
+            // السطرين الجايين دول أهم حاجة عشان يشيلوا الصفر القديم
+            label: { show: false }, 
+            labelLine: { show: false },
+            emphasis: { label: { show: false } },
             data: chartData
         }]
     };
