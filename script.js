@@ -161,17 +161,16 @@ function resetFilters() {
 
 // 5. رسم الـ Donut Chart
 function renderStatusDonut(data) {
-    const chartDom = document.getElementById('statusDonutChart');
+    // استخدمنا الـ ID الجديد هنا
+    const chartDom = document.getElementById('statusDonutChartV2');
     if (!chartDom) return;
     
+    // مسح أي نسخة سابقة تماماً
     let myChart = echarts.getInstanceByDom(chartDom);
     if (myChart) { myChart.dispose(); }
     myChart = echarts.init(chartDom);
 
     const uniqueIds = [...new Set(data.map(item => item['INDEX']))];
-    const totalBadge = document.getElementById('totalCasesNumber');
-    if (totalBadge) totalBadge.textContent = uniqueIds.length.toLocaleString();
-
     const seenIds = new Set();
     const counts = {};
     let totalUniqueCount = 0;
@@ -187,7 +186,6 @@ function renderStatusDonut(data) {
 
     const statusNames = Object.keys(counts);
     const baseColors = ['#8B0000', '#B22222', '#CD5C5C', '#E9967A', '#F08080', '#FFE4E1'];
-
     const chartData = statusNames.map((name, index) => ({
         name: name,
         value: counts[name],
@@ -202,12 +200,11 @@ function renderStatusDonut(data) {
         },
         legend: { 
             orient: 'horizontal', 
-            top: '5',             // مسافة بسيطة من أعلى الكارت
+            top: '5%',           // وضع الـ Legend في الأعلى مع مسافة بسيطة
             left: 'center', 
             type: 'scroll',
             textStyle: { color: '#ccc', fontSize: 11 },
             pageIconColor: '#d32f2f',
-            // إضافة النسبة المئوية بجانب كل اسم في الـ Legend
             formatter: function(name) {
                 const item = chartData.find(d => d.name === name);
                 const p = totalUniqueCount > 0 ? ((item.value / totalUniqueCount) * 100).toFixed(1) : 0;
@@ -217,8 +214,8 @@ function renderStatusDonut(data) {
         series: [{
             name: 'حالة الإجراء',
             type: 'pie',
-            radius: ['45%', '70%'], 
-            center: ['50%', '60%'], // نزلنا الشارت شوية لتحت عشان الـ Legend اللي بقى واخد مساحة فوق
+            radius: ['40%', '65%'], 
+            center: ['50%', '60%'], // الشارت في المنتصف تماماً وتحت الـ Legend
             avoidLabelOverlap: true,
             itemStyle: { borderRadius: 8, borderColor: '#242426', borderWidth: 2 },
             label: { show: false }, 
@@ -227,7 +224,8 @@ function renderStatusDonut(data) {
     };
     
     myChart.setOption(option);
-    myCharts['donut'] = myChart;
+    // تأكد من تحديث اسم المصفوفة هنا لو كنت بتستخدمها في الـ Resize
+    myCharts['donut'] = myChart; 
 }
 
 // 6. رسم الـ Line Chart (نسخة مصححة ومجربة)
