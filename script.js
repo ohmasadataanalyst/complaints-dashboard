@@ -192,61 +192,53 @@ function renderStatusDonut(data) {
     }));
 
     const option = {
-        tooltip: { trigger: 'item', confine: true, backgroundColor: 'rgba(20, 20, 20, 0.9)', textStyle: { color: '#eee' }, confine: true  },
-        legend: { 
-            orient: 'horizontal', 
-            top: '2%', 
-            left: 'center', 
-            type: 'scroll',
-            textStyle: { color: '#ccc', fontSize: 10 },
-            formatter: function(name) {
-                const item = chartData.find(d => d.name === name);
-                const p = totalUniqueCount > 0 ? ((item.value / totalUniqueCount) * 100).toFixed(1) : 0;
-                return `${name} (${p}%)`;
-            }
-        },
-        // هنا بنرسم الرقم والكلمة برمجياً عشان نلغي أي حاجة يدوية في الـ HTML
-        graphic: [
-            {
-                type: 'group',
-                left: 'center',
-                top: '58%', 
-                children: [
-                    {
-                        type: 'text',
-                        left: 'center',
-                        top: 'middle',
-                        style: {
-                            fill: '#d32f2f',
-                            text: totalUniqueCount.toLocaleString(),
-                            font: 'bold 30px sans-serif'
-                        }
-                    },
-                    {
-                        type: 'text',
-                        left: 'center',
-                        top: 35, 
-                        style: {
-                            fill: '#aaa',
-                            text: 'إجمالي الحالات',
-                            font: '14px sans-serif'
-                        }
+    legend: { 
+        orient: 'horizontal', 
+        top: '5%', // رفعنا الألوان لفوق قريبة من العنوان
+        left: 'center',
+        type: 'scroll',
+        textStyle: { color: '#ccc', fontSize: 11 }
+    },
+    graphic: [
+        {
+            type: 'group',
+            left: 'center',
+            top: '48%', // رفعنا الرقم عشان يتوسط الدائرة الجديدة
+            children: [
+                {
+                    type: 'text',
+                    left: 'center',
+                    top: 'middle',
+                    style: {
+                        fill: '#d32f2f',
+                        text: totalUniqueCount.toLocaleString(),
+                        font: 'bold 28px sans-serif'
                     }
-                ]
-            }
-        ],
-        series: [{
-            name: 'حالة الإجراء',
-            type: 'pie',
-            center: ['50%', '65%'], 
-            radius: ['45%', '72%'],
-            avoidLabelOverlap: false,
-            itemStyle: { borderRadius: 8, borderColor: '#242426', borderWidth: 2 },
-            label: { show: false }, // إخفاء أي ليبل افتراضي قد يسبب ظهور الصفر
-            emphasis: { label: { show: false } },
-            data: chartData
-        }]
-    };
+                },
+                {
+                    type: 'text',
+                    left: 'center',
+                    top: 30, 
+                    style: {
+                        fill: '#aaa',
+                        text: 'إجمالي الحالات',
+                        font: '13px sans-serif'
+                    }
+                }
+            ]
+        }
+    ],
+    series: [{
+        type: 'pie',
+        // السنتر بقا '55%' عشان نرفعه لفوق شوية ونقرب من العنوان
+        center: ['50%', '55%'], 
+        radius: ['50%', '75%'], // كبرنا الدائرة شوية عشان تملى الفراغ
+        avoidLabelOverlap: false,
+        itemStyle: { borderRadius: 8, borderColor: '#242426', borderWidth: 2 },
+        label: { show: false },
+        data: chartData
+    }]
+};
     
     myChart.setOption(option, true); // استخدام true لمسح أي إعدادات قديمة
     myCharts['donut'] = myChart; 
