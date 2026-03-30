@@ -161,16 +161,14 @@ function resetFilters() {
 
 // 5. رسم الـ Donut Chart
 function renderStatusDonut(data) {
-    // استخدمنا الـ ID الجديد هنا
     const chartDom = document.getElementById('statusDonutChartV2');
     if (!chartDom) return;
     
-    // مسح أي نسخة سابقة تماماً
     let myChart = echarts.getInstanceByDom(chartDom);
     if (myChart) { myChart.dispose(); }
     myChart = echarts.init(chartDom);
 
-    const uniqueIds = [...new Set(data.map(item => item['INDEX']))];
+    // معالجة البيانات
     const seenIds = new Set();
     const counts = {};
     let totalUniqueCount = 0;
@@ -191,7 +189,6 @@ function renderStatusDonut(data) {
         value: counts[name],
         itemStyle: { color: baseColors[index] || '#4a4a4a' }
     }));
-// ... داخل دالة renderStatusDonut ...
 
     const option = {
         tooltip: { trigger: 'item', confine: true },
@@ -200,44 +197,59 @@ function renderStatusDonut(data) {
             top: '5%', 
             left: 'center', 
             type: 'scroll',
-            textStyle: { color: '#ccc' }
-        },
-        // إعدادات النص في منتصف الـ Donut
-        graphic: {
-            type: 'text',
-            left: 'center',    // توسيط أفقي للنص بالنسبة للحاوية
-            top: '58%',        // تعديل التمركز الرأسي ليتناسب مع center الشارت بالأسفل
-            style: {
-                // استخدام الرقم الفعلي من البيانات مباشرة بدل الصفر
-                text: totalUniqueCount.toLocaleString(), 
-                textAlign: 'center',
-                fill: '#d32f2f',
-                fontSize: 24,
-                fontWeight: 'bold'
+            textStyle: { color: '#ccc' },
+            // إضافة النسبة بجانب الاسم في الليجند كما طلبت سابقاً
+            formatter: function(name) {
+                const item = chartData.find(d => d.name === name);
+                const p = totalUniqueCount > 0 ? ((item.value / totalUniqueCount) * 100).toFixed(1) : 0;
+                return `${name} (${p}%)`;
             }
         },
+        // استخدام مجموعة عناصر جرافيك لضمان التمركز الرأسي والأفقي المثالي
+        graphic: [
+            {
+                type: 'group',
+                left: 'center',
+                top: '58%', // نفس سنتر الدائرة تقريباً
+                children: [
+                    {
+                        type: 'text',
+                        z: 100,
+                        left: 'center',
+                        top: 'middle',
+                        style: {
+                            fill: '#d32f2f',
+                            text: totalUniqueCount.toLocaleString(),
+                            font: 'bold 26px sans-serif'
+                        }
+                    },
+                    {
+                        type: 'text',
+                        z: 100,
+                        left: 'center',
+                        top: 30, // إزاحة للأسفل تحت الرقم
+                        style: {
+                            fill: '#ccc',
+                            text: 'إجمالي الحالات',
+                            font: '14px sans-serif'
+                        }
+                    }
+                ]
+            }
+        ],
         series: [{
             name: 'حالة الإجراء',
             type: 'pie',
-            // الـ center هنا لازم يتوافق مع الـ graphic top أعلاه
-            center: ['50%', '60%'], 
-            radius: ['45%', '70%'],
+            center: ['50%', '63%'], // ترحيل بسيط للأسفل ليعطي مساحة لليجند فوق
+            radius: ['45%', '75%'],
             avoidLabelOverlap: true,
             itemStyle: { borderRadius: 8, borderColor: '#242426', borderWidth: 2 },
-            label: {
-                show: true,
-                position: 'center',
-                // النص الفرعي تحت الرقم
-                formatter: '\n\nإجمالي الحالات',
-                color: '#ccc',
-                fontSize: 12
-            },
+            label: { show: false }, // قفلنا الـ label الأصلي عشان نعتمد على الـ graphic
             data: chartData
         }]
     };
-        
+    
     myChart.setOption(option);
-    // تأكد من تحديث اسم المصفوفة هنا لو كنت بتستخدمها في الـ Resize
     myCharts['donut'] = myChart; 
 }
 
