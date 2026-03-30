@@ -198,4 +198,33 @@ table {
     #branchLeaderboard {
         min-width: 450px !important; 
     }
+
+   /* 1. تقليل المسافات الجانبية للجدول لتوفير مساحة */
+    #branchLeaderboard td, #branchLeaderboard th {
+        padding: 10px 5px !important; 
+        font-size: 11px !important; /* تصغير الخط قليلاً للموبايل */
+    }
+
+    /* 2. ضبط عرض عمود التصنيف (#) ليكون صغيراً جداً */
+    #branchLeaderboard th:first-child, 
+    #branchLeaderboard td:first-child {
+        width: 25px !important; 
+        text-align: center !important;
+    }
+
+    /* 3. الحل السحري لعمود الإجمالي: منع تداخل الأرقام */
+    #branchLeaderboard td:last-child {
+        min-width: 55px !important; /* ضمان مساحة كافية للرقم */
+        white-space: nowrap !important; /* منع الرقم من النزول لسطر جديد */
+        text-align: center !important;
+        font-weight: bold;
+    }
+
+    /* 4. تقليل عرض عمود اسم الفرع ليعطي مساحة للباقي */
+    #branchLeaderboard td:nth-child(2) {
+        max-width: 120px;
+        overflow: hidden;
+        text-overflow: ellipsis; /* لو الاسم طويل يظهر نقاط... بدل ما يكسر الجدول */
+        white-space: nowrap;
+    }
 }
