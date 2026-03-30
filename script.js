@@ -165,15 +165,17 @@ function renderStatusDonut(data) {
     if (!chartDom) return;
     
     let myChart = echarts.getInstanceByDom(chartDom);
-    if (myChart) { myChart.dispose(); }
+    if (myChart) { 
+        myChart.dispose(); 
+    }
     myChart = echarts.init(chartDom);
 
-    // حساب البيانات
+    // حساب البيانات بدقة
     const seenIds = new Set();
     const counts = {};
     let totalUniqueCount = 0;
     data.forEach(r => {
-        if (!seenIds.has(r['INDEX'])) {
+        if (r['INDEX'] && !seenIds.has(r['INDEX'])) {
             const status = r['مدى الاجراء المتخذ'] || 'غير محدد';
             counts[status] = (counts[status] || 0) + 1;
             seenIds.add(r['INDEX']);
@@ -203,7 +205,7 @@ function renderStatusDonut(data) {
                 return `${name} (${p}%)`;
             }
         },
-        // الجرافيك ده هو اللي بيعرض الـ 9,000 والكلمة تحتها
+        // هنا بنرسم الرقم والكلمة برمجياً عشان نلغي أي حاجة يدوية في الـ HTML
         graphic: [
             {
                 type: 'group',
@@ -217,7 +219,7 @@ function renderStatusDonut(data) {
                         style: {
                             fill: '#d32f2f',
                             text: totalUniqueCount.toLocaleString(),
-                            font: 'bold 28px sans-serif'
+                            font: 'bold 30px sans-serif'
                         }
                     },
                     {
@@ -225,7 +227,7 @@ function renderStatusDonut(data) {
                         left: 'center',
                         top: 35, 
                         style: {
-                            fill: '#ccc',
+                            fill: '#aaa',
                             text: 'إجمالي الحالات',
                             font: '14px sans-serif'
                         }
@@ -237,18 +239,16 @@ function renderStatusDonut(data) {
             name: 'حالة الإجراء',
             type: 'pie',
             center: ['50%', '65%'], 
-            radius: ['45%', '75%'],
-            avoidLabelOverlap: true,
+            radius: ['45%', '72%'],
+            avoidLabelOverlap: false,
             itemStyle: { borderRadius: 8, borderColor: '#242426', borderWidth: 2 },
-            // السطرين الجايين دول أهم حاجة عشان يشيلوا الصفر القديم
-            label: { show: false }, 
-            labelLine: { show: false },
+            label: { show: false }, // إخفاء أي ليبل افتراضي قد يسبب ظهور الصفر
             emphasis: { label: { show: false } },
             data: chartData
         }]
     };
     
-    myChart.setOption(option);
+    myChart.setOption(option, true); // استخدام true لمسح أي إعدادات قديمة
     myCharts['donut'] = myChart; 
 }
 
