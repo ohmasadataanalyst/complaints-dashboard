@@ -167,14 +167,15 @@ function renderStatusDonut(data) {
     let myChart = echarts.getInstanceByDom(chartDom);
     if (myChart) { myChart.dispose(); }
     myChart = echarts.init(chartDom);
-    
-    const isMobile = window.innerWidth <= 768;
 
-    // ... (جزء معالجة البيانات يظل كما هو) ...
     const uniqueIds = [...new Set(data.map(item => item['INDEX']))];
+    const totalBadge = document.getElementById('totalCasesNumber');
+    if (totalBadge) totalBadge.textContent = uniqueIds.length.toLocaleString();
+
     const seenIds = new Set();
     const counts = {};
     let totalUniqueCount = 0;
+
     data.forEach(r => {
         if (!seenIds.has(r['INDEX'])) {
             const status = r['مدى الاجراء المتخذ'] || 'غير محدد';
@@ -183,8 +184,10 @@ function renderStatusDonut(data) {
             totalUniqueCount++;
         }
     });
+
     const statusNames = Object.keys(counts);
     const baseColors = ['#8B0000', '#B22222', '#CD5C5C', '#E9967A', '#F08080', '#FFE4E1'];
+
     const chartData = statusNames.map((name, index) => ({
         name: name,
         value: counts[name],
@@ -195,31 +198,30 @@ function renderStatusDonut(data) {
         tooltip: { 
             trigger: 'item', 
             confine: true,
-            formatter: '{b}: <b>{c}</b>'
+            formatter: '{b}: <b>{c}</b> ({d}%)'
         },
         legend: { 
-            orient: isMobile ? 'horizontal' : 'vertical',
-            // في الكمبيوتر هنرجعه للشمال بس بمسافة بسيطة من الحافة
-            left: isMobile ? 'center' : '5%', 
-            bottom: isMobile ? 0 : 'auto',
-            top: isMobile ? 'auto' : 'middle',
+            orient: 'horizontal', 
+            top: '5',             // مسافة بسيطة من أعلى الكارت
+            left: 'center', 
             type: 'scroll',
-            textStyle: { color: '#ccc', fontSize: isMobile ? 10 : 12 },
-            pageIconColor: '#d32f2f'
+            textStyle: { color: '#ccc', fontSize: 11 },
+            pageIconColor: '#d32f2f',
+            // إضافة النسبة المئوية بجانب كل اسم في الـ Legend
+            formatter: function(name) {
+                const item = chartData.find(d => d.name === name);
+                const p = totalUniqueCount > 0 ? ((item.value / totalUniqueCount) * 100).toFixed(1) : 0;
+                return `${name} (${p}%)`;
+            }
         },
         series: [{
             name: 'حالة الإجراء',
             type: 'pie',
-            // رجعنا المركز للوسط 50% عشان الرسمة متخرجش بره الشاشة
-            center: isMobile ? ['50%', '40%'] : ['50%', '50%'],
-            radius: isMobile ? ['40%', '65%'] : ['55%', '80%'],
+            radius: ['45%', '70%'], 
+            center: ['50%', '60%'], // نزلنا الشارت شوية لتحت عشان الـ Legend اللي بقى واخد مساحة فوق
+            avoidLabelOverlap: true,
             itemStyle: { borderRadius: 8, borderColor: '#242426', borderWidth: 2 },
-            label: { 
-                show: !isMobile, // إظهار الخطوط التوضيحية في الكمبيوتر فقط لإعطاء شكل احترافي
-                position: 'outside',
-                color: '#ccc',
-                formatter: '{d}%' // إظهار النسبة المئوية بجانب كل جزء
-            },
+            label: { show: false }, 
             data: chartData
         }]
     };
@@ -227,6 +229,7 @@ function renderStatusDonut(data) {
     myChart.setOption(option);
     myCharts['donut'] = myChart;
 }
+
 // 6. رسم الـ Line Chart (نسخة مصححة ومجربة)
 function renderLineChart(data) {
     const chartDom = document.getElementById('lineChart');
