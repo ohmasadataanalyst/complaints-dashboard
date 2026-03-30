@@ -192,7 +192,7 @@ function renderStatusDonut(data) {
     }));
 
     const option = {
-        tooltip: { trigger: 'item', confine: true },
+        tooltip: { trigger: 'item', confine: true, backgroundColor: 'rgba(20, 20, 20, 0.9)', textStyle: { color: '#eee' }, confine: true  },
         legend: { 
             orient: 'horizontal', 
             top: '2%', 
