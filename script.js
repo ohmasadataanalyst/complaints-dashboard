@@ -192,55 +192,65 @@ function renderStatusDonut(data) {
     }));
 
     const option = {
-    legend: { 
-        orient: 'horizontal', 
-        top: '5%', // رفعنا الألوان لفوق قريبة من العنوان
-        left: 'center',
-        type: 'scroll',
-        textStyle: { color: '#ccc', fontSize: 11 }
-    },
-    graphic: [
-        {
-            type: 'group',
+        // --- إضافة الـ Tooltip بالـ Dark Mode ---
+        tooltip: {
+            trigger: 'item',
+            confine: true, // تضمن ظهورها داخل حدود الكارت
+            backgroundColor: 'rgba(30, 30, 30, 0.9)',
+            borderWidth: 0,
+            textStyle: { color: '#fff', fontSize: 12 },
+            formatter: function(params) {
+                return `${params.marker} ${params.name}: <b>${params.value.toLocaleString()}</b> (${params.percent}%)`;
+            }
+        },
+        legend: { 
+            orient: 'horizontal', 
+            top: '5%', 
             left: 'center',
-            top: '48%', // رفعنا الرقم عشان يتوسط الدائرة الجديدة
-            children: [
-                {
-                    type: 'text',
-                    left: 'center',
-                    top: 'middle',
-                    style: {
-                        fill: '#d32f2f',
-                        text: totalUniqueCount.toLocaleString(),
-                        font: 'bold 28px sans-serif'
+            type: 'scroll',
+            textStyle: { color: '#ccc', fontSize: 11 }
+        },
+        graphic: [
+            {
+                type: 'group',
+                left: 'center',
+                top: '48%', 
+                children: [
+                    {
+                        type: 'text',
+                        left: 'center',
+                        top: 'middle',
+                        style: {
+                            fill: '#d32f2f',
+                            text: totalUniqueCount.toLocaleString(),
+                            font: 'bold 28px sans-serif'
+                        }
+                    },
+                    {
+                        type: 'text',
+                        left: 'center',
+                        top: 30, 
+                        style: {
+                            fill: '#aaa',
+                            text: 'إجمالي الحالات',
+                            font: '13px sans-serif'
+                        }
                     }
-                },
-                {
-                    type: 'text',
-                    left: 'center',
-                    top: 30, 
-                    style: {
-                        fill: '#aaa',
-                        text: 'إجمالي الحالات',
-                        font: '13px sans-serif'
-                    }
-                }
-            ]
-        }
-    ],
-    series: [{
-        type: 'pie',
-        // السنتر بقا '55%' عشان نرفعه لفوق شوية ونقرب من العنوان
-        center: ['50%', '55%'], 
-        radius: ['50%', '75%'], // كبرنا الدائرة شوية عشان تملى الفراغ
-        avoidLabelOverlap: false,
-        itemStyle: { borderRadius: 8, borderColor: '#242426', borderWidth: 2 },
-        label: { show: false },
-        data: chartData
-    }]
-};
+                ]
+            }
+        ],
+        series: [{
+            type: 'pie',
+            center: ['50%', '55%'], 
+            radius: ['50%', '75%'], 
+            avoidLabelOverlap: false,
+            itemStyle: { borderRadius: 8, borderColor: '#242426', borderWidth: 2 },
+            label: { show: false },
+            data: chartData
+        }]
+    };
     
-    myChart.setOption(option, true); // استخدام true لمسح أي إعدادات قديمة
+    myChart.setOption(option, true); 
     myCharts['donut'] = myChart; 
 }
 
