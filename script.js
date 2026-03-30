@@ -164,11 +164,11 @@ function renderStatusDonut(data) {
     const chartDom = document.getElementById('statusDonutChart');
     if (!chartDom) return;
     
-    // سطر مهم جداً: بيمسح أي نسخة قديمة من الشارت عشان يطبق إعدادات الموبايل الجديدة
     let myChart = echarts.getInstanceByDom(chartDom);
     if (myChart) { myChart.dispose(); }
     myChart = echarts.init(chartDom);
     
+    // تحديد دقيق: هل العرض أقل من 768 بكسل؟
     const isMobile = window.innerWidth <= 768;
 
     const uniqueIds = [...new Set(data.map(item => item['INDEX']))];
@@ -203,14 +203,16 @@ function renderStatusDonut(data) {
         tooltip: { 
             trigger: 'item', 
             backgroundColor: 'rgba(20, 20, 20, 0.9)',
-            textStyle: { color: '#eee', fontSize: 12 },
             confine: true,
-            formatter: (params) => `${params.name}: <b>${params.value}</b>`
+            formatter: '{b}: <b>{c}</b>'
         },
         legend: { 
+            // الإعدادات الشرطية
             orient: isMobile ? 'horizontal' : 'vertical',
-            left: isMobile ? 'center' : 'left',
-            bottom: isMobile ? 10 : 'auto',
+            left: isMobile ? 'center' : 'left', // الكمبيوتر هيرجع "يسار" فوراً
+            bottom: isMobile ? 0 : 'auto',     // الموبايل "تحت"، الكمبيوتر "تلقائي"
+            top: isMobile ? 'auto' : 'middle', // الكمبيوتر "في المنتصف"
+            
             type: 'scroll',
             textStyle: { color: '#ccc', fontSize: isMobile ? 10 : 11 },
             pageIconColor: '#d32f2f'
@@ -218,8 +220,10 @@ function renderStatusDonut(data) {
         series: [{
             name: 'حالة الإجراء',
             type: 'pie',
+            // الموبايل دائرة أصغر ومرفوعة، الكمبيوتر دائرة كبيرة وفي النص
             radius: isMobile ? ['40%', '65%'] : ['60%', '85%'],
-            center: isMobile ? ['50%', '40%'] : ['50%', '50%'],
+            center: isMobile ? ['50%', '40%'] : ['60%', '50%'], // حركنا الكمبيوتر لليمين شوية عشان ميزحمش الـ Legend
+            
             itemStyle: { borderRadius: 8, borderColor: '#242426', borderWidth: 2 },
             label: { show: false },
             data: chartData
@@ -229,7 +233,6 @@ function renderStatusDonut(data) {
     myChart.setOption(option);
     myCharts['donut'] = myChart;
 }
-
 // 6. رسم الـ Line Chart (نسخة مصححة ومجربة)
 function renderLineChart(data) {
     const chartDom = document.getElementById('lineChart');
