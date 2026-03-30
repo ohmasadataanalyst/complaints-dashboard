@@ -100,6 +100,9 @@ body {
     border: none;
     border-radius: 6px;
     cursor: pointer;
+    flex: 1 1 100%; /* هذا السطر يجبر الزرار على محاولة أخذ عرض كامل */
+    max-width: 200px; /* يمنعه من التمدد بشكل مبالغ فيه في الشاشات الكبيرة */
+    margin: 0 auto; /* يتوسط المساحة المتاحة */
 }
 
 /* ==========================================================
@@ -199,13 +202,22 @@ th, td {
     }
 
    .filters-bar {
-        flex-direction: column !important; /* ترتيب العناصر رأسي */
-        align-items: stretch !important; /* جعل العناصر تمتد لآخر العرض */
+        display: flex !important;
+        flex-direction: column !important; /* ترتيب رأسي إجباري */
+        align-items: stretch !important; 
+        gap: 15px !important;
+    }
+
+    .slicer {
+        width: 100% !important;
+        flex: none !important; /* إلغاء خاصية النمو المرن */
     }
 
     .btn-reset {
-        width: 100% !important; /* الزرار ياخد عرض الشاشة */
-        margin-top: 10px !important; /* مسافة بسيطة بينه وبين اللي قبله */
-        order: 99; /* لضمان إنه يفضل دائماً آخر عنصر تحت */
+        display: block !important;
+        width: 100% !important; /* عرض كامل الشاشة */
+        max-width: none !important; /* إلغاء الحد الأقصى */
+        margin-top: 10px !important;
+        order: 99 !important; /* يضمن بقاءه في الأسفل مهما كان ترتيبه في الـ HTML */
     }
 }
