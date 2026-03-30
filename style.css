@@ -343,3 +343,9 @@ tr:hover { background: #2d2d2d; }
         font-size: 12px !important; /* تصغير الخط قليلاً */
     }
 }
+
+@media screen and (max-width: 768px) {
+    #statusDonutChart {
+        height: 400px !important; /* مساحة كافية للشارت والـ Legend تحت بعض */
+    }
+}
