@@ -93,6 +93,15 @@ body {
     border-radius: 6px;
 }
 
+.btn-reset {
+    background-color: #444;
+    color: #fff;
+    padding: 12px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
 /* ==========================================================
    4. الكروت والجداول - منع تمدد الجداول
    ========================================================== */
@@ -187,5 +196,16 @@ th, td {
     #complainsRawTable td:nth-child(4) {
         min-width: 200px !important;
         font-size: 11px !important;
+    }
+
+   .filters-bar {
+        flex-direction: column !important; /* ترتيب العناصر رأسي */
+        align-items: stretch !important; /* جعل العناصر تمتد لآخر العرض */
+    }
+
+    .btn-reset {
+        width: 100% !important; /* الزرار ياخد عرض الشاشة */
+        margin-top: 10px !important; /* مسافة بسيطة بينه وبين اللي قبله */
+        order: 99; /* لضمان إنه يفضل دائماً آخر عنصر تحت */
     }
 }
