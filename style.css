@@ -1,0 +1,265 @@
+/* الإعدادات العامة */
+body {
+    background-color: #121212;
+    color: #e0e0e0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    direction: rtl;
+}
+
+/* تنسيقات الحاوية الرئيسية */
+.dashboard-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* النسخة المدمجة والنهائية للهيدر العلوي */
+.main-header {
+    background-color: #1a1a1a; 
+    padding: 10px 40px; /* مسافة متوازنة للعناصر */
+    display: flex;
+    justify-content: space-between; /* اللوجو في طرف والعنوان في طرف */
+    align-items: center;
+    border-bottom: 2px solid #333;
+    margin-bottom: 25px;
+    border-radius: 8px; /* لمسة جمالية بسيطة للحواف */
+    min-height: 100px; /* ارتفاع مناسب للهيدر */
+}
+
+.main-header h1 {
+    color: #eee;
+    font-size: 22px;
+    margin: 0;
+    font-weight: 600;
+}
+
+/* تنسيقات اللوجو */
+.header-logo {
+    display: flex;
+    align-items: center;
+}
+
+#companyLogo {
+    height: 85px; /* كبرنا الارتفاع قليلاً ليكون اللوجو أوضح */
+    width: auto;
+    max-width: 250px;
+    object-fit: contain;
+    /* فلتر لجعل اللوجو "ينطق" على الخلفية الغامقة */
+    filter: drop-shadow(0px 0px 5px rgba(255,255,255,0.4)); 
+    transition: transform 0.3s ease; /* تأثير بسيط عند المرور بالماوس */
+    padding: 5px 0;
+}
+
+#companyLogo:hover {
+    transform: scale(1.05); /* تكبير خفيف عند الوقوف عليه بالماوس */
+}
+
+/* --- قسم الفلاتر (Filters Bar) --- */
+.filters-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    background: #1e1e1e;
+    padding: 25px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+    justify-content: space-between; 
+}
+
+.slicer {
+    /* توزيع متساوي بانتظام */
+    flex: 1 1 0; 
+    min-width: 200px; 
+}
+
+.slicer label { 
+    display: block; 
+    font-size: 13px; 
+    color: #aaa; 
+    margin-bottom: 8px; 
+    margin-right: 5px;
+}
+
+.slicer select, #datePicker {
+    width: 100%; 
+    padding: 10px 15px; 
+    background: #2d2d2d;
+    border: 1px solid #444;
+    color: white;
+    border-radius: 6px;
+    box-sizing: border-box;
+    cursor: pointer;
+    transition: border-color 0.3s ease;
+}
+
+.slicer select:hover, #datePicker:hover {
+    border-color: #d32f2f;
+}
+
+/* زر الـ Reset في المنتصف أسفل الفلاتر */
+.btn-reset {
+    flex-basis: 100%; /* إجبار الزر على أخذ سطر لوحده */
+    max-width: 150px;
+    margin: 20px auto 0 auto; /* توسيط أفقي */
+    background: transparent;
+    border: 1px solid #d32f2f;
+    color: #d32f2f;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.btn-reset:hover {
+    background: #d32f2f;
+    color: white;
+}
+
+/* --- الكروت والشارتات --- */
+.card {
+    background: #1e1e1e;
+    border-radius: 12px;
+    padding: 25px;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+}
+
+.card h3 { 
+    margin-top: 0; 
+    color: #888; 
+    font-weight: 500; 
+    font-size: 16px; 
+    text-align: center;
+    border-bottom: 1px solid #333; 
+    padding-bottom: 10px; 
+}
+
+.donut-container { position: relative; }
+
+.center-label {
+    position: absolute; 
+    top: 50%; 
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    pointer-events: none;
+}
+
+.center-label span { 
+    display: block; 
+    font-size: 32px; 
+    font-weight: bold; 
+    color: #d32f2f; 
+}
+
+.funnels-section {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 25px;
+}
+
+@media (min-width: 900px) {
+    .funnels-section { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* --- تنسيقات الجداول (Leaderboard & Raw Data) --- */
+.full-width-table, .full-raw-data-card {
+    width: 100%;
+    overflow: hidden;
+}
+
+.card-header-flex {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.badge {
+    background: #d32f2f22;
+    color: #d32f2f;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    border: 1px solid #d32f2f44;
+}
+
+/* حاويات السكرول للجداول */
+.table-container, .raw-table-container {
+    max-height: 500px;
+    overflow-y: auto;
+    border: 1px solid #333;
+    border-radius: 6px;
+}
+
+.raw-table-container { overflow-x: auto; } /* سكرول أفقي للبيانات الضخمة */
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th {
+    background: #1a1a1b;
+    color: #888;
+    font-weight: 500;
+    padding: 15px 12px;
+    text-align: right;
+    font-size: 13px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    border-bottom: 2px solid #333;
+}
+
+td {
+    padding: 15px 12px;
+    border-bottom: 1px solid #2d2d2d;
+    font-size: 14px;
+    color: #eee;
+    vertical-align: top;
+}
+
+tbody tr:nth-child(even) { background: #24242644; }
+tr:hover { background: #2d2d2d; }
+
+/* تمييز عمود العدد في جدول المتصدرين */
+#branchLeaderboard td:last-child {
+    text-align: center;
+    font-weight: bold;
+    color: #f44336;
+    background: rgba(244, 67, 54, 0.05);
+}
+
+/* إعدادات خاصة لجدول البيانات الخام (Raw Data) */
+#complainsRawTable { table-layout: fixed; } /* لضبط عرض الأعمدة بدقة */
+
+#complainsRawTable td {
+    white-space: normal;
+    word-wrap: break-word;
+    line-height: 1.6;
+}
+
+/* تخصيص عرض أعمدة الجدول الخام */
+#complainsRawTable th:nth-child(1) { width: 50px; }  /* # */
+#complainsRawTable th:nth-child(2) { width: 150px; } /* الفرع */
+#complainsRawTable th:nth-child(6) { width: 400px; } /* محتوى الشكوى */
+#complainsRawTable th:nth-child(7) { width: 120px; } /* التاريخ */
+
+/* الأزرار العامة */
+.btn-primary { 
+    background: #d32f2f; 
+    color: white; 
+    border: none; 
+    padding: 10px 25px; 
+    border-radius: 6px; 
+    cursor: pointer;
+    font-weight: 500;
+    transition: background 0.3s;
+}
+
+.btn-primary:hover { background: #b71c1c; }

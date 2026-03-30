@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complains Dashboard - Clean Style</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" type="text/css" href="https://npmcdn.com/flatpickr/dist/themes/dark.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+</head>
+<body>
+
+    <header class="main-header">
+        <h2 style="color: #d32f2f; margin: 0;">داشبورد تحليل شكاوي العملاء</h2>
+        <div class="header-logo">
+            <img src="logo.png" alt="لوجو الشركة" id="companyLogo">
+        </div>
+        <div class="upload-section">
+            <input type="file" id="excelFile" accept=".xlsx, .xls" hidden>
+            <!-- <button class="btn-primary" onclick="document.getElementById('excelFile').click()">+ رفع ملف البيانات</button> -->
+        </div>
+    </header>
+
+    <div class="dashboard-container">
+        
+        <section class="filters-bar">
+            <div class="slicer">
+                <label>نطاق التاريخ</label>
+                <input type="text" id="datePicker" placeholder="اختر الفترة.." readonly>
+            </div>
+            <div class="slicer">
+                <label>الفرع</label>
+                <select id="branchSlicer"><option value="all">الكل</option></select>
+            </div>
+            <div class="slicer">
+                <label>نوع الشكوى</label>
+                <select id="typeSlicer"><option value="all">الكل</option></select>
+            </div>
+            <div class="slicer">
+                <label>مدير المنطقة</label>
+                <select id="managerSlicer"><option value="all">الكل</option></select>
+            </div>
+            <button class="btn-reset" onclick="resetFilters()">إعادة ضبط</button>
+        </section>
+
+        <div class="card full-width">
+            <h3>تطور الشكاوى (الخط الزمني)</h3>
+            <div id="lineChart" style="width: 100%; height: 400px;"></div>
+        </div>
+
+        <div class="card full-width">
+            <h3>إجمالي الحالات حسب الإجراء</h3>
+            <div class="donut-container">
+                <div id="statusDonutChart" style="width: 100%; height: 400px;"></div>
+                <div class="center-label">
+                    <span id="totalCasesNumber">0</span>
+                    <small>إجمالي الحالات</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="funnels-section">
+            <div class="card">
+                <h3>الجودة</h3>
+                <div id="qualityFunnel" style="width: 100%; height: 350px;"></div>
+            </div>
+            <div class="card">
+                <h3>نوع الشكوى</h3>
+                <div id="typeFunnel" style="width: 100%; height: 350px;"></div>
+            </div>
+            <div class="card">
+                <h3>المنتج</h3>
+                <div id="productFunnel" style="width: 100%; height: 350px;"></div>
+            </div>
+        </div>
+
+        <div class="card full-width-table" style="margin-top: 25px;">
+            <div class="card-header-flex">
+                <h3>أعلى الفروع شكاوي (Top 15)</h3>
+            </div>
+            <div class="table-container">
+                <table id="branchLeaderboard">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">#</th>
+                            <th>اسم الفرع</th>
+                            <th style="text-align: center;">إجمالي الشكاوى</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card full-raw-data-card" style="margin-top: 25px;">
+            <div class="card-header-flex">
+                <h3>تفاصيل الشكاوى المسجلة ( شكاوى العملاء )</h3>
+                <span class="badge" id="rawTableCount" style="display: none;">يتم التحميل...</span>
+            </div>
+            
+            <div class="raw-table-container">
+                <table id="complainsRawTable">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>الفرع</th>
+                            <th>مدير المنطقة</th>
+                            <th>نوع الشكوى</th>
+                            <th>المنتج</th>
+                            <th>محتوى شكوى العميل</th>
+                            <th>التاريخ</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
