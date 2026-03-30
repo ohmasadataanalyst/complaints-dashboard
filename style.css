@@ -68,20 +68,28 @@ body {
 }
 
 /* ==========================================================
-   3. الفلاتر (Filters Bar)
+   3. الفلاتر (Filters Bar) - مُحسنة للكمبيوتر
    ========================================================== */
 .filters-bar {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid; /* استخدام الشبكة لتوزيع احترافي */
+    grid-template-columns: repeat(4, 1fr) 150px; /* 4 فلاتر متساوية + زر صغير */
     gap: 20px;
     background: #1e1e1e;
     padding: 20px;
     border-radius: 8px;
     margin-bottom: 30px;
+    align-items: end; /* محاذاة الفلاتر مع الزرار من الأسفل */
 }
 
 .slicer {
-    flex: 1 1 200px; /* مرونة في التوزيع */
+    width: 100%;
+}
+
+.slicer label {
+    display: block;
+    font-size: 13px;
+    color: #aaa;
+    margin-bottom: 8px;
 }
 
 .slicer select, #datePicker {
@@ -91,22 +99,29 @@ body {
     border: 1px solid #444;
     color: white;
     border-radius: 6px;
+    cursor: pointer;
 }
 
 .btn-reset {
     background-color: #444;
     color: #fff;
-    padding: 12px;
+    padding: 10px;
     border: none;
     border-radius: 6px;
     cursor: pointer;
-    flex: 1 1 100%; /* هذا السطر يجبر الزرار على محاولة أخذ عرض كامل */
-    max-width: 200px; /* يمنعه من التمدد بشكل مبالغ فيه في الشاشات الكبيرة */
-    margin: 0 auto; /* يتوسط المساحة المتاحة */
+    height: 40px; /* متناسق مع ارتفاع السلكت */
+    width: 100%;
+    font-weight: 600;
+    transition: background 0.3s;
+    text-transform: uppercase;
+}
+
+.btn-reset:hover {
+    background-color: #d32f2f;
 }
 
 /* ==========================================================
-   4. الكروت والجداول - منع تمدد الجداول
+   4. الكروت والجداول
    ========================================================== */
 .card {
     background: #1e1e1e;
@@ -119,21 +134,21 @@ body {
 }
 
 .card h3 {
-    text-align: center;       
-    width: 100%;             
-    margin-top: 0;           
-    margin-bottom: 20px;      
-    padding-bottom: 12px;     
+    text-align: center;        
+    width: 100%;              
+    margin-top: 0;            
+    margin-bottom: 20px;       
+    padding-bottom: 12px;      
     border-bottom: 1px solid #333; 
-    color: #ffffff;           
-    font-size: 18px;          
-    font-weight: 600;         
+    color: #ffffff;            
+    font-size: 18px;           
+    font-weight: 600;          
 }
 
 .table-container, .raw-table-container {
     max-height: 500px;
     width: 100%;
-    overflow-x: auto; /* السكرول الأفقي هنا فقط */
+    overflow-x: auto; 
     border: 1px solid #333;
     border-radius: 6px;
 }
@@ -141,7 +156,7 @@ body {
 table {
     width: 100%;
     border-collapse: collapse;
-    table-layout: fixed; /* يمنع الجدول من فرض عرض عشوائي */
+    table-layout: fixed;
     min-width: 600px; 
 }
 
@@ -149,10 +164,9 @@ th, td {
     padding: 12px;
     text-align: center;
     border-bottom: 1px solid #333;
-    word-wrap: break-word; /* كسر الكلمات الطويلة */
+    word-wrap: break-word;
 }
 
-/* تنسيق خاص لعمود محتوى الشكوى */
 #complainsRawTable td:nth-child(4) {
     min-width: 250px;
     white-space: normal !important;
@@ -161,7 +175,7 @@ th, td {
 }
 
 /* ==========================================================
-   6. التنسيق للموبايل (الإصلاح الشامل)
+   6. التنسيق للموبايل (Responsive Design)
    ========================================================== */
 @media screen and (max-width: 768px) {
     .dashboard-container {
@@ -176,7 +190,7 @@ th, td {
     }
 
     .main-header h2 {
-        position: relative !important; /* إلغاء الـ absolute */
+        position: relative !important;
         left: 0 !important;
         transform: none !important;
         font-size: 18px !important;
@@ -192,7 +206,23 @@ th, td {
         height: 60px !important;
     }
 
-    /* إصلاح تداخل الأرقام في جدول الفروع */
+    /* إصلاح الفلاتر للموبايل */
+    .filters-bar {
+        display: flex !important;
+        flex-direction: column !important; /* ترتيب رأسي */
+        grid-template-columns: none !important; /* إلغاء نظام الشبكة */
+        justify-content: flex-start !important;
+        gap: 15px !important;
+        padding: 15px !important;
+    }
+
+    .btn-reset {
+        width: 100% !important;
+        margin-top: 10px !important;
+        order: 99; /* لضمان وجوده في الأسفل */
+    }
+
+    /* إصلاح جداول الموبايل */
     #branchLeaderboard {
         min-width: 450px !important; 
     }
@@ -203,43 +233,17 @@ th, td {
         font-weight: bold;
     }
 
-    /* إصلاح جدول الشكاوى */
     #complainsRawTable {
         min-width: 550px !important;
     }
 
-    #complainsRawTable td:nth-child(4) {
-        min-width: 200px !important;
-        font-size: 11px !important;
-    }
-
-  .filters-bar {
-        display: flex !important;
-        flex-direction: column !important;
-        justify-content: flex-start !important; /* البدء من الأعلى لمنع تباعد العناصر */
-        gap: 15px !important; /* مسافة محددة وصغيرة بين كل فلتر والتاني */
+    .card {
         padding: 15px !important;
-        height: auto !important; /* ضمان إن الارتفاع على قد المحتوى بس */
-    }
-
-    .slicer {
-        width: 100% !important;
-        margin-bottom: 0 !important; /* إلغاء أي مارجن قديم */
-        flex: none !important; /* منع العنصر من التمدد لشغل مساحة أكبر */
-    }
-
-    .btn-reset {
-        margin-top: 10px !important; /* مسافة بسيطة تحت آخر فلتر */
-    }
-
-   .card {
-        padding: 15px !important; /* تقليل الفراغ الداخلي */
-        margin-bottom: 15px !important; /* تقليل المسافة بين الكروت */
+        margin-bottom: 15px !important;
     }
     
     .card h3 {
-        font-size: 14px !important; /* تصغير العناوين لتناسب الموبايل */
+        font-size: 15px !important;
         margin-bottom: 15px !important;
-        text-align: center !important;
     }
 }
