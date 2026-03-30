@@ -119,7 +119,15 @@ body {
 }
 
 .card h3 {
-   text-align: center;
+    text-align: center;       
+    width: 100%;             
+    margin-top: 0;           
+    margin-bottom: 20px;      
+    padding-bottom: 12px;     
+    border-bottom: 1px solid #333; 
+    color: #ffffff;           
+    font-size: 18px;          
+    font-weight: 600;         
 }
 
 .table-container, .raw-table-container {
@@ -232,5 +240,6 @@ th, td {
     .card h3 {
         font-size: 14px !important; /* تصغير العناوين لتناسب الموبايل */
         margin-bottom: 15px !important;
+        text-align: center !important;
     }
 }
