@@ -163,9 +163,12 @@ function resetFilters() {
 function renderStatusDonut(data) {
     const chartDom = document.getElementById('statusDonutChart');
     if (!chartDom) return;
-    const myChart = echarts.init(chartDom);
     
-    // فحص حجم الشاشة (أقل من 768px يعتبر موبايل)
+    // سطر مهم جداً: بيمسح أي نسخة قديمة من الشارت عشان يطبق إعدادات الموبايل الجديدة
+    let myChart = echarts.getInstanceByDom(chartDom);
+    if (myChart) { myChart.dispose(); }
+    myChart = echarts.init(chartDom);
+    
     const isMobile = window.innerWidth <= 768;
 
     const uniqueIds = [...new Set(data.map(item => item['INDEX']))];
@@ -200,42 +203,30 @@ function renderStatusDonut(data) {
         tooltip: { 
             trigger: 'item', 
             backgroundColor: 'rgba(20, 20, 20, 0.9)',
-            borderColor: '#333',
-            borderWidth: 1,
             textStyle: { color: '#eee', fontSize: 12 },
             confine: true,
-            formatter: (params) => `${params.marker} ${params.name}: <b>${params.value.toLocaleString()}</b> (${params.percent}%)`
+            formatter: (params) => `${params.name}: <b>${params.value}</b>`
         },
         legend: { 
-            // تعديل ديناميكي: لو موبايل خليه أفقي وتحت، لو كمبيوتر خليه رأسي وعلى اليسار
             orient: isMobile ? 'horizontal' : 'vertical',
             left: isMobile ? 'center' : 'left',
-            bottom: isMobile ? '0' : 'auto',
-            top: isMobile ? 'auto' : 'middle',
-            
-            textStyle: { color: '#ccc', fontSize: isMobile ? 10 : 11 },
+            bottom: isMobile ? 10 : 'auto',
             type: 'scroll',
-            pageIconColor: '#d32f2f',
-            formatter: function(name) {
-                const item = chartData.find(d => d.name === name);
-                const p = totalUniqueCount > 0 ? ((item.value / totalUniqueCount) * 100).toFixed(1) : 0;
-                return isMobile ? name : `${name} (${p}%)`; // في الموبايل بنخفي النسبة من الـ Legend لتوفير مساحة
-            }
+            textStyle: { color: '#ccc', fontSize: isMobile ? 10 : 11 },
+            pageIconColor: '#d32f2f'
         },
         series: [{
             name: 'حالة الإجراء',
             type: 'pie',
-            // في الموبايل بنصغر الحجم شوية ونرفعه لفوق عشان الـ Legend اللي تحت
-            radius: isMobile ? ['45%', '70%'] : ['60%', '85%'],
+            radius: isMobile ? ['40%', '65%'] : ['60%', '85%'],
             center: isMobile ? ['50%', '40%'] : ['50%', '50%'],
-            
             itemStyle: { borderRadius: 8, borderColor: '#242426', borderWidth: 2 },
             label: { show: false },
             data: chartData
         }]
     };
     
-    myChart.setOption(option, true);
+    myChart.setOption(option);
     myCharts['donut'] = myChart;
 }
 
