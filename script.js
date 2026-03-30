@@ -202,27 +202,23 @@ function renderStatusDonut(data) {
             textStyle: { color: '#eee', fontSize: 12 },
             formatter: (params) => `${params.marker} ${params.name}: <b>${params.value.toLocaleString()}</b> (${params.percent}%)`
         },
-       legend: { 
-            orient: 'horizontal',      // تغيير الاتجاه لأفقي
-            bottom: '0',               // وضعه في أسفل الشارت
-            left: 'center',            // توسيط الـ Legend
-            textStyle: { color: '#ccc', fontSize: 10 }, // تصغير الخط للموبايل
-            type: 'scroll',            // تفعيل التمرير إذا كانت العناصر كثيرة
-            pageIconColor: '#d32f2f',  // لون أسهم التمرير
-            pageTextStyle: { color: '#fff' },
+        legend: { 
+            orient: 'vertical',  // رجعنا الوضع الرأسي
+            left: 'left',        // المكان الأصلي
+            textStyle: { color: '#ccc', fontSize: 11 },
+            type: 'scroll',
             formatter: function(name) {
-                // اختصار النص إذا كان طويلاً جداً للموبايل
-                return name.length > 15 ? name.substring(0, 12) + '..' : name;
+                const item = chartData.find(d => d.name === name);
+                const p = totalUniqueCount > 0 ? ((item.value / totalUniqueCount) * 100).toFixed(1) : 0;
+                return `${name} (${p}%)`;
             }
         },
         series: [{
             name: 'حالة الإجراء',
             type: 'pie',
-            radius: ['50%', '75%'],    // تصغير القطر الداخلي شوية لتوفير مساحة
-            center: ['50%', '40%'],    // رفع الشارت للأعلى قليلاً لترك مساحة للـ Legend تحت
-            avoidLabelOverlap: true,
-            itemStyle: { borderRadius: 6, borderColor: '#242426', borderWidth: 2 },
-            label: { show: false },    // إخفاء الـ Labels الجانبية تماماً في الموبايل
+            radius: ['60%', '85%'],
+            itemStyle: { borderRadius: 8, borderColor: '#242426', borderWidth: 2 },
+            label: { show: false },
             data: chartData
         }]
     };
