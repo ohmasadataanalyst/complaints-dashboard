@@ -168,17 +168,13 @@ function renderStatusDonut(data) {
     if (myChart) { myChart.dispose(); }
     myChart = echarts.init(chartDom);
     
-    // تحديد دقيق: هل العرض أقل من 768 بكسل؟
     const isMobile = window.innerWidth <= 768;
 
+    // ... (جزء معالجة البيانات يظل كما هو) ...
     const uniqueIds = [...new Set(data.map(item => item['INDEX']))];
-    const totalBadge = document.getElementById('totalCasesNumber');
-    if (totalBadge) totalBadge.textContent = uniqueIds.length.toLocaleString();
-
     const seenIds = new Set();
     const counts = {};
     let totalUniqueCount = 0;
-
     data.forEach(r => {
         if (!seenIds.has(r['INDEX'])) {
             const status = r['مدى الاجراء المتخذ'] || 'غير محدد';
@@ -187,45 +183,43 @@ function renderStatusDonut(data) {
             totalUniqueCount++;
         }
     });
-
     const statusNames = Object.keys(counts);
     const baseColors = ['#8B0000', '#B22222', '#CD5C5C', '#E9967A', '#F08080', '#FFE4E1'];
-
-    const chartData = statusNames.map((name, index) => {
-        return {
-            name: name,
-            value: counts[name],
-            itemStyle: { color: baseColors[index] || '#4a4a4a' }
-        };
-    });
+    const chartData = statusNames.map((name, index) => ({
+        name: name,
+        value: counts[name],
+        itemStyle: { color: baseColors[index] || '#4a4a4a' }
+    }));
 
     const option = {
         tooltip: { 
             trigger: 'item', 
-            backgroundColor: 'rgba(20, 20, 20, 0.9)',
             confine: true,
             formatter: '{b}: <b>{c}</b>'
         },
         legend: { 
-            // الإعدادات الشرطية
             orient: isMobile ? 'horizontal' : 'vertical',
-            left: isMobile ? 'center' : 'left', // الكمبيوتر هيرجع "يسار" فوراً
-            bottom: isMobile ? 0 : 'auto',     // الموبايل "تحت"، الكمبيوتر "تلقائي"
-            top: isMobile ? 'auto' : 'middle', // الكمبيوتر "في المنتصف"
-            
+            // في الكمبيوتر هنرجعه للشمال بس بمسافة بسيطة من الحافة
+            left: isMobile ? 'center' : '5%', 
+            bottom: isMobile ? 0 : 'auto',
+            top: isMobile ? 'auto' : 'middle',
             type: 'scroll',
-            textStyle: { color: '#ccc', fontSize: isMobile ? 10 : 11 },
+            textStyle: { color: '#ccc', fontSize: isMobile ? 10 : 12 },
             pageIconColor: '#d32f2f'
         },
         series: [{
             name: 'حالة الإجراء',
             type: 'pie',
-            // الموبايل دائرة أصغر ومرفوعة، الكمبيوتر دائرة كبيرة وفي النص
-            radius: isMobile ? ['40%', '65%'] : ['60%', '85%'],
-            center: isMobile ? ['50%', '40%'] : ['60%', '50%'], // حركنا الكمبيوتر لليمين شوية عشان ميزحمش الـ Legend
-            
+            // رجعنا المركز للوسط 50% عشان الرسمة متخرجش بره الشاشة
+            center: isMobile ? ['50%', '40%'] : ['50%', '50%'],
+            radius: isMobile ? ['40%', '65%'] : ['55%', '80%'],
             itemStyle: { borderRadius: 8, borderColor: '#242426', borderWidth: 2 },
-            label: { show: false },
+            label: { 
+                show: !isMobile, // إظهار الخطوط التوضيحية في الكمبيوتر فقط لإعطاء شكل احترافي
+                position: 'outside',
+                color: '#ccc',
+                formatter: '{d}%' // إظهار النسبة المئوية بجانب كل جزء
+            },
             data: chartData
         }]
     };
