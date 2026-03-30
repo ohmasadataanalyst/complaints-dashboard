@@ -1,4 +1,6 @@
-/* الإعدادات العامة */
+/* ==========================================================
+   1. الإعدادات العامة والتأسيس
+   ========================================================== */
 body {
     background-color: #121212;
     color: #e0e0e0;
@@ -8,44 +10,42 @@ body {
     direction: rtl;
 }
 
-/* تنسيقات الحاوية الرئيسية */
 .dashboard-container {
     max-width: 1400px;
     margin: 0 auto;
     padding: 20px;
 }
 
-/* النسخة المعدلة لضمان توسيط العنوان تماماً */
+/* ==========================================================
+   2. الهيدر (Header) - توسيط العنوان واللوجو
+   ========================================================== */
 .main-header {
     background-color: #1a1a1a; 
     padding: 10px 40px; 
     display: flex;
     align-items: center;
-    justify-content: space-between; /* بيخلي اللوجو يمين والعنوان شمال (أو العكس حسب اللغة) */
+    justify-content: space-between;
     border-bottom: 2px solid #333;
     margin-bottom: 25px;
     border-radius: 8px; 
     min-height: 100px; 
-    position: relative; /* مهم جداً عشان التوسيط المطلق للعنوان */
+    position: relative;
 }
 
-.main-header h1 {
-    color: #eee;
+.main-header h2 {
+    color: #d32f2f;
     font-size: 22px;
     margin: 0;
     font-weight: 600;
-    /* التعديل السحري للتوسيط في نص الصفحة بالظبط */
     position: absolute;
     left: 50%;
     transform: translateX(-50%);
-    white-space: nowrap; /* عشان العنوان ميتكسرش لو الكلام كتير */
+    white-space: nowrap;
 }
 
-/* تنسيقات اللوجو */
 .header-logo {
     display: flex;
     align-items: center;
-    /* لو عايز اللوجو يكون على الشمال خالص في صفحة عربي */
     margin-right: auto; 
 }
 
@@ -63,7 +63,9 @@ body {
     transform: scale(1.05);
 }
 
-/* --- قسم الفلاتر (Filters Bar) --- */
+/* ==========================================================
+   3. الفلاتر (Filters Bar)
+   ========================================================== */
 .filters-bar {
     display: flex;
     flex-wrap: wrap;
@@ -76,7 +78,6 @@ body {
 }
 
 .slicer {
-    /* توزيع متساوي بانتظام */
     flex: 1 1 0; 
     min-width: 200px; 
 }
@@ -105,11 +106,10 @@ body {
     border-color: #d32f2f;
 }
 
-/* زر الـ Reset في المنتصف أسفل الفلاتر */
 .btn-reset {
-    flex-basis: 100%; /* إجبار الزر على أخذ سطر لوحده */
+    flex-basis: 100%;
     max-width: 150px;
-    margin: 20px auto 0 auto; /* توسيط أفقي */
+    margin: 20px auto 0 auto;
     background: transparent;
     border: 1px solid #d32f2f;
     color: #d32f2f;
@@ -126,14 +126,17 @@ body {
     color: white;
 }
 
-/* --- الكروت والشارتات --- */
+/* ==========================================================
+   4. الكروت والشارتات (Cards & Charts)
+   ========================================================== */
 .card {
     background: #1e1e1e;
     border-radius: 12px;
-    padding: 15px 25px 40px 25px; /* زودنا الـ padding اللي تحت لـ 40px */
+    padding: 20px 25px 25px 25px; /* مسافات متوازنة */
     margin-bottom: 25px;
     box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-    height: auto; /* تأكد إنه auto عشان يكبر مع الشارت */
+    height: auto; 
+    overflow: hidden;
 }
 
 .card h3 { 
@@ -146,8 +149,10 @@ body {
     padding-bottom: 10px; 
 }
 
-.donut-container { position: relative; }
-
+.donut-container { 
+    position: relative; 
+    width: 100%;
+}
 
 .funnels-section {
     display: grid;
@@ -159,7 +164,9 @@ body {
     .funnels-section { grid-template-columns: repeat(3, 1fr); }
 }
 
-/* --- تنسيقات الجداول (Leaderboard & Raw Data) --- */
+/* ==========================================================
+   5. الجداول (Tables)
+   ========================================================== */
 .full-width-table, .full-raw-data-card {
     width: 100%;
     overflow: hidden;
@@ -181,19 +188,20 @@ body {
     border: 1px solid #d32f2f44;
 }
 
-/* حاويات السكرول للجداول */
+/* حاوية الجدول مع دعم السكرول */
 .table-container, .raw-table-container {
     max-height: 500px;
     overflow-y: auto;
+    overflow-x: auto; /* مهم للموبايل */
     border: 1px solid #333;
     border-radius: 6px;
+    background: #1a1a1b;
 }
-
-.raw-table-container { overflow-x: auto; } /* سكرول أفقي للبيانات الضخمة */
 
 table {
     width: 100%;
     border-collapse: collapse;
+    min-width: 600px; /* ضمان عدم انضغاط الجدول */
 }
 
 th {
@@ -220,7 +228,6 @@ td {
 tbody tr:nth-child(even) { background: #24242644; }
 tr:hover { background: #2d2d2d; }
 
-/* تمييز عمود العدد في جدول المتصدرين */
 #branchLeaderboard td:last-child {
     text-align: center;
     font-weight: bold;
@@ -228,110 +235,55 @@ tr:hover { background: #2d2d2d; }
     background: rgba(244, 67, 54, 0.05);
 }
 
-/* إعدادات خاصة لجدول البيانات الخام (Raw Data) */
-#complainsRawTable { table-layout: fixed; } /* لضبط عرض الأعمدة بدقة */
-
-#complainsRawTable td {
-    white-space: normal;
-    word-wrap: break-word;
-    line-height: 1.6;
-}
-
-/* تخصيص عرض أعمدة الجدول الخام */
-#complainsRawTable th:nth-child(1) { width: 50px; }  /* # */
-#complainsRawTable th:nth-child(2) { width: 150px; } /* الفرع */
-#complainsRawTable th:nth-child(6) { width: 400px; } /* محتوى الشكوى */
-#complainsRawTable th:nth-child(7) { width: 120px; } /* التاريخ */
-
-/* الأزرار العامة */
-.btn-primary { 
-    background: #d32f2f; 
-    color: white; 
-    border: none; 
-    padding: 10px 25px; 
-    border-radius: 6px; 
-    cursor: pointer;
-    font-weight: 500;    
-    transition: background 0.3s;
-}
-
-.btn-primary:hover { background: #b71c1c; }
-
 /* ==========================================================
-   تنسيقات شاشات الموبايل (أصغر من 768px) - النسخة المصححة
+   6. تنسيقات شاشات الموبايل (Responsive Design)
    ========================================================== */
 @media screen and (max-width: 768px) {
-    body {
-        padding: 5px; 
-    }
+    body { padding: 5px; }
 
-    /* 1. الهيدر: اللوجو فوق والعنوان تحت */
     .main-header {
         flex-direction: column !important;
         padding: 20px 10px !important;
-        text-align: center;
         min-height: auto !important;
     }
 
-    .main-header h1 {
-        position: static !important; /* إلغاء التوسيط المطلق */
+    .main-header h2 {
+        position: static !important;
         transform: none !important;
         font-size: 18px !important;
         margin-top: 15px !important;
-        white-space: normal !important; /* السماح للعنوان بالنزول لسطر جديد لو طويل */
+        white-space: normal !important;
     }
 
-    .header-logo {
-        margin: 0 !important;
-    }
+    .header-logo { margin: 0 !important; }
+    #companyLogo { height: 65px !important; }
 
-    #companyLogo {
-        height: 65px !important; /* حجم أنسب للموبايل */
-    }
-
-    /* 2. الفلاتر: كل فلتر ياخد سطر لوحده */
     .filters-bar {
         flex-direction: column !important;
         padding: 15px !important;
-        gap: 10px !important;
     }
 
-    .slicer {
-        width: 100% !important;
-        min-width: unset !important;
-        flex: none !important;
-    }
+    .slicer { width: 100% !important; min-width: unset !important; }
+    .btn-reset { max-width: 100% !important; width: 100%; }
 
-    .btn-reset {
-        max-width: 100% !important; /* الزرار ياخد العرض كامل */
-        width: 100%;
-        margin-top: 10px !important;
-    }
-
-    /* 3. الشارتات (الفانلز): تترص تحت بعض */
-    .funnels-section {
-        grid-template-columns: 1fr !important; /* عمود واحد */
-        gap: 15px !important;
-    }
-
-    /* 4. الجداول: أهم جزء للموبايل */
-    .table-container, .raw-table-container {
-        overflow-x: auto !important; /* تفعيل التمرير الأفقي */
+    /* تحسين الجداول للموبايل */
+    .table-container {
+        display: block;
         -webkit-overflow-scrolling: touch;
     }
 
-    table {
-        min-width: 800px; /* إجبار الجدول يحافظ على عرضه عشان الداتا متتداخلش، والمستخدم يمرر يمين وشمال */
+    #branchLeaderboard {
+        min-width: 450px !important; /* يمنع الجدول من التعصر */
     }
 
-    td, th {
+    #branchLeaderboard td, #branchLeaderboard th {
         padding: 10px 8px !important;
-        font-size: 12px !important; /* تصغير الخط قليلاً */
+        font-size: 12px !important;
+        white-space: nowrap; /* منع انقسام النص */
     }
-}
 
-@media screen and (max-width: 768px) {
-    #statusDonutChart {
-        height: 400px !important; /* مساحة كافية للشارت والـ Legend تحت بعض */
+    /* ضبط ارتفاع شارت الدونات في الموبايل */
+    #statusDonutChartV2 {
+        height: 350px !important;
     }
 }
