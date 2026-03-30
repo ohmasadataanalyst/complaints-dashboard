@@ -118,6 +118,10 @@ body {
     overflow: hidden; 
 }
 
+.card h3 {
+   text-align: center;
+}
+
 .table-container, .raw-table-container {
     max-height: 500px;
     width: 100%;
@@ -218,5 +222,15 @@ th, td {
 
     .btn-reset {
         margin-top: 10px !important; /* مسافة بسيطة تحت آخر فلتر */
+    }
+
+   .card {
+        padding: 15px !important; /* تقليل الفراغ الداخلي */
+        margin-bottom: 15px !important; /* تقليل المسافة بين الكروت */
+    }
+    
+    .card h3 {
+        font-size: 14px !important; /* تصغير العناوين لتناسب الموبايل */
+        margin-bottom: 15px !important;
     }
 }
