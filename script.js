@@ -427,12 +427,17 @@ function renderRawDataTable(data) {
 
     const grouped = data.reduce((acc, item) => {
         const id = item['INDEX'];
-        if (!acc[id]) { acc[id] = { ...item, types: new Set([item['نوع الشكوى']]) }; } 
-        else { acc[id].types.add(item['نوع الشكوى']); }
+        if (!acc[id]) { 
+            acc[id] = { ...item, types: new Set([item['نوع الشكوى']]) }; 
+        } else { 
+            acc[id].types.add(item['نوع الشكوى']); 
+        }
         return acc;
     }, {});
 
-    const displayData = Object.values(grouped).sort((a, b) => (parseExcelDate(b['التاريخ']) || 0) - (parseExcelDate(a['التاريخ']) || 0)).slice(0, 100);
+    const displayData = Object.values(grouped)
+        .sort((a, b) => (parseExcelDate(b['التاريخ']) || 0) - (parseExcelDate(a['التاريخ']) || 0))
+        .slice(0, 100);
 
     if (countBadge) countBadge.textContent = `${Object.keys(grouped).length.toLocaleString()} شكوى فريدة`;
 
@@ -440,7 +445,15 @@ function renderRawDataTable(data) {
         const tr = document.createElement('tr');
         const dObj = parseExcelDate(item['التاريخ']);
         const formattedDate = dObj ? dObj.toLocaleDateString('ar-EG') : '-';
-        tr.innerHTML = `<td>${item['INDEX']}</td><td>${item['اختر الفرع'] || '-'}</td><td>${item['مدير المنطقة المسؤول'] || '-'}</td><td>${Array.from(item.types).join(' + ')}</td><td>${item['الشكوى على اي منتج؟'] || '-'}</td><td>${item['محتوى شكوى العميل'] || '-'}</td><td>${formattedDate}</td>`;
+        
+        // تم حذف أعمدة مدير المنطقة والمنتج من الـ innerHTML
+        tr.innerHTML = `
+            <td>${item['INDEX']}</td>
+            <td>${item['اختر الفرع'] || '-'}</td>
+            <td>${Array.from(item.types).join(' + ')}</td>
+            <td>${item['محتوى شكوى العميل'] || '-'}</td>
+            <td>${formattedDate}</td>
+        `;
         tbody.appendChild(tr);
     });
 }
