@@ -227,4 +227,20 @@ table {
         text-overflow: ellipsis; /* لو الاسم طويل يظهر نقاط... بدل ما يكسر الجدول */
         white-space: nowrap;
     }
+
+   /* توحيد محاذاة عمود اسم الفرع */
+    #branchLeaderboard th:nth-child(2), 
+    #branchLeaderboard td:nth-child(2) {
+        text-align: right !important; /* إجبار المحاذاة لليمين للعنوان والأسماء */
+        padding-right: 15px !important; /* مسافة بسيطة من اليمين عشان ميبقاش لازق في الخط */
+        width: auto; /* سيب المساحة تتوزع طبيعي */
+    }
+
+    /* ضمان إن الأسماء متدخلش في الأعمدة اللي جنبها */
+    #branchLeaderboard td:nth-child(2) {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 150px; /* ضبط الحد الأقصى للعرض في الموبايل */
+    }
 }
