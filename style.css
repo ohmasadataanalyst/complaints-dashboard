@@ -265,8 +265,91 @@ tr:hover { background: #2d2d2d; }
     padding: 10px 25px; 
     border-radius: 6px; 
     cursor: pointer;
-    font-weight: 500;
+    font-weight: 500;    
     transition: background 0.3s;
 }
 
 .btn-primary:hover { background: #b71c1c; }
+
+/* ==========================================================
+   تنسيقات شاشات الموبايل (أصغر من 768px)
+   ========================================================== */
+@media screen and (max-width: 768px) {
+    body {
+        padding: 10px; /* تقليل المسافات الجانبية للصفحة كلها */
+    }
+
+    /* 1. ضبط الهيدر (اللوجو والعنوان) */
+    .main-header {
+        flex-direction: column; /* جعل اللوجو والعنوان تحت بعض */
+        padding: 15px;
+        text-align: center;
+        min-height: auto; /* الغاء الارتفاع الثابت القديم */
+    }
+
+    .main-header h1 {
+        position: static; /* الغاء التوسيط المطلق القديم */
+        transform: none; /* الغاء التوسيط المطلق القديم */
+        font-size: 18px; /* تصغير الخط قليلاً */
+        margin-top: 10px; /* مسافة بين اللوجو والعنوان */
+    }
+
+    .header-logo {
+        margin: 0; /* الغاء الهوامش القديمة */
+    }
+
+    #companyLogo {
+        height: 60px; /* تصغير اللوجو قليلاً */
+    }
+
+    /* 2. ضبط حاويات الفلاتر والرسوم البيانية */
+    .filters-container,
+    .charts-container,
+    .table-container {
+        grid-template-columns: 1fr !important; /* جعل أي شبكة (Grid) عمود واحد فقط */
+        display: flex;
+        flex-direction: column; /* رص العناصر تحت بعض */
+        padding: 15px !important;
+        margin-bottom: 15px;
+    }
+
+    /* 3. ضبط عناصر الفلاتر الفردية */
+    .filter-item {
+        width: 100%; /* الفلتر ياخد عرض الشاشة كلها */
+        margin-bottom: 10px;
+    }
+
+    .filter-item select, 
+    .filter-item input {
+        width: 100%; /* القائمة المدسدلة وحقل التاريخ ياخدوا العرض الكامل */
+        box-sizing: border-box; /* عشان الـ padding ميخربش العرض */
+    }
+
+    /* زرار إعادة الضبط (Reset) */
+    button#resetFilters {
+        width: 100%; /* الزرار ياخد العرض الكامل */
+        margin-top: 10px;
+    }
+
+    /* 4. ضبط الرسوم البيانية والجداول */
+    .chart-box,
+    .table-box {
+        width: 100% !important;
+        margin: 0 0 15px 0 !important;
+    }
+
+    /* يسمح بالتمرير الأفقي للجداول الطويلة (زي صورة التفاصيل) */
+    .data-table-wrapper {
+        overflow-x: auto;
+    }
+
+    table.data-table {
+        min-width: 600px; /* يضمن إن الجدول ميتعصرش، ويسمح بالتمرير */
+        font-size: 14px; /* تصغير خط الجدول */
+    }
+
+    /* تنسيقات العناوين داخل الداشبورد */
+    .chart-title {
+        font-size: 16px;
+    }
+}
