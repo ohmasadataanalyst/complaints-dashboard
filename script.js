@@ -227,7 +227,7 @@ function renderStatusDonut(data) {
     myCharts['donut'] = myChart;
 }
 
-// 6. رسم الـ Line Chart
+// 6. رسم الـ Line Chart (نسخة مصححة ومجربة)
 function renderLineChart(data) {
     const chartDom = document.getElementById('lineChart');
     if (!chartDom) return;
@@ -257,28 +257,26 @@ function renderLineChart(data) {
             trigger: 'axis', 
             backgroundColor: 'rgba(20, 20, 20, 0.9)', 
             textStyle: { color: '#eee' },
-            confine: true // يمنع التولتيب يخرج بره الشاشة في الموبايل
+            confine: true 
         },
         grid: { left: '3%', right: '4%', bottom: '15%', containLabel: true },
-        // إضافة الـ DataZoom بيسمح للمستخدم "يزق" الشارت يمين وشمال لو الداتا كتير
         dataZoom: [
             {
-                type: 'inside', // يسمح بالـ Zoom عن طريق اللمس (Pinch)
-                start: 70,      // يبدأ بعرض آخر 30% من البيانات فقط لتقليل الزحمة
+                type: 'inside', 
+                start: 70,      
                 end: 100
             }
         ],
         xAxis: { 
             type: 'category', 
             data: sortedDates, 
-            axisTick: { show: false }, // شيل الشرطات الصغيرة
+            axisTick: { show: false },
             axisLabel: { 
                 color: '#aaa', 
                 fontSize: 10,
-                hideOverlap: true, // سحر ECharts: بيخفي اللي داخل في بعضه أوتوماتيك
+                hideOverlap: true,
                 formatter: (value) => {
                     const date = new Date(value);
-                    // عرض اليوم والشهر فقط للاختصار
                     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
                     return `${monthNames[date.getMonth()]} ${date.getDate()}`;
                 }
@@ -292,12 +290,12 @@ function renderLineChart(data) {
         series: [{
             name: 'عدد الشكاوى اليومية',
             type: 'line',
-            smooth: true,      // بيخلي الخط انسيابي (بيقلل حدة الـ Noise)
-            symbol: 'circle',  // يظهر نقطة فقط عند الوقوف بالماوس
+            smooth: true,
+            symbol: 'circle',
             showSymbol: false,
             lineStyle: { width: 2, color: '#d32f2f' },
             areaStyle: {
-                opacity: 0.2, // زيادة الشفافية شوية عشان تدي "كتلة" للخط
+                opacity: 0.2,
                 color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
                     { offset: 0, color: '#d32f2f' },
                     { offset: 1, color: 'transparent' }
@@ -306,6 +304,10 @@ function renderLineChart(data) {
             data: values
         }]
     };
+
+    myChart.setOption(option, true);
+    myCharts['line'] = myChart;
+}
 // 8. رسم الـ Funnel Charts
 function renderFunnel(id, data, column) {
     const chartDom = document.getElementById(id);
