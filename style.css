@@ -201,23 +201,22 @@ th, td {
         font-size: 11px !important;
     }
 
-   .filters-bar {
+  .filters-bar {
         display: flex !important;
-        flex-direction: column !important; /* ترتيب رأسي إجباري */
-        align-items: stretch !important; 
-        gap: 15px !important;
+        flex-direction: column !important;
+        justify-content: flex-start !important; /* البدء من الأعلى لمنع تباعد العناصر */
+        gap: 15px !important; /* مسافة محددة وصغيرة بين كل فلتر والتاني */
+        padding: 15px !important;
+        height: auto !important; /* ضمان إن الارتفاع على قد المحتوى بس */
     }
 
     .slicer {
         width: 100% !important;
-        flex: none !important; /* إلغاء خاصية النمو المرن */
+        margin-bottom: 0 !important; /* إلغاء أي مارجن قديم */
+        flex: none !important; /* منع العنصر من التمدد لشغل مساحة أكبر */
     }
 
     .btn-reset {
-        display: block !important;
-        width: 100% !important; /* عرض كامل الشاشة */
-        max-width: none !important; /* إلغاء الحد الأقصى */
-        margin-top: 10px !important;
-        order: 99 !important; /* يضمن بقاءه في الأسفل مهما كان ترتيبه في الـ HTML */
+        margin-top: 10px !important; /* مسافة بسيطة تحت آخر فلتر */
     }
 }
