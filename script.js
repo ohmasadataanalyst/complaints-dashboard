@@ -191,38 +191,51 @@ function renderStatusDonut(data) {
         value: counts[name],
         itemStyle: { color: baseColors[index] || '#4a4a4a' }
     }));
+// ... داخل دالة renderStatusDonut ...
 
     const option = {
-        tooltip: { 
-            trigger: 'item', 
-            confine: true,
-            formatter: '{b}: <b>{c}</b> ({d}%)'
-        },
+        tooltip: { trigger: 'item', confine: true },
         legend: { 
             orient: 'horizontal', 
-            top: '5%',           // وضع الـ Legend في الأعلى مع مسافة بسيطة
+            top: '5%', 
             left: 'center', 
             type: 'scroll',
-            textStyle: { color: '#ccc', fontSize: 11 },
-            pageIconColor: '#d32f2f',
-            formatter: function(name) {
-                const item = chartData.find(d => d.name === name);
-                const p = totalUniqueCount > 0 ? ((item.value / totalUniqueCount) * 100).toFixed(1) : 0;
-                return `${name} (${p}%)`;
+            textStyle: { color: '#ccc' }
+        },
+        // إعدادات النص في منتصف الـ Donut
+        graphic: {
+            type: 'text',
+            left: 'center',    // توسيط أفقي للنص بالنسبة للحاوية
+            top: '58%',        // تعديل التمركز الرأسي ليتناسب مع center الشارت بالأسفل
+            style: {
+                // استخدام الرقم الفعلي من البيانات مباشرة بدل الصفر
+                text: totalUniqueCount.toLocaleString(), 
+                textAlign: 'center',
+                fill: '#d32f2f',
+                fontSize: 24,
+                fontWeight: 'bold'
             }
         },
         series: [{
             name: 'حالة الإجراء',
             type: 'pie',
-            radius: ['40%', '65%'], 
-            center: ['50%', '60%'], // الشارت في المنتصف تماماً وتحت الـ Legend
+            // الـ center هنا لازم يتوافق مع الـ graphic top أعلاه
+            center: ['50%', '60%'], 
+            radius: ['45%', '70%'],
             avoidLabelOverlap: true,
             itemStyle: { borderRadius: 8, borderColor: '#242426', borderWidth: 2 },
-            label: { show: false }, 
+            label: {
+                show: true,
+                position: 'center',
+                // النص الفرعي تحت الرقم
+                formatter: '\n\nإجمالي الحالات',
+                color: '#ccc',
+                fontSize: 12
+            },
             data: chartData
         }]
     };
-    
+        
     myChart.setOption(option);
     // تأكد من تحديث اسم المصفوفة هنا لو كنت بتستخدمها في الـ Resize
     myCharts['donut'] = myChart; 
