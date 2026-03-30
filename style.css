@@ -15,17 +15,18 @@ body {
     padding: 20px;
 }
 
-/* النسخة المدمجة والنهائية للهيدر العلوي */
+/* النسخة المعدلة لضمان توسيط العنوان تماماً */
 .main-header {
     background-color: #1a1a1a; 
-    padding: 10px 40px; /* مسافة متوازنة للعناصر */
+    padding: 10px 40px; 
     display: flex;
-    justify-content: space-between; /* اللوجو في طرف والعنوان في طرف */
     align-items: center;
+    justify-content: space-between; /* بيخلي اللوجو يمين والعنوان شمال (أو العكس حسب اللغة) */
     border-bottom: 2px solid #333;
     margin-bottom: 25px;
-    border-radius: 8px; /* لمسة جمالية بسيطة للحواف */
-    min-height: 100px; /* ارتفاع مناسب للهيدر */
+    border-radius: 8px; 
+    min-height: 100px; 
+    position: relative; /* مهم جداً عشان التوسيط المطلق للعنوان */
 }
 
 .main-header h1 {
@@ -33,27 +34,33 @@ body {
     font-size: 22px;
     margin: 0;
     font-weight: 600;
+    /* التعديل السحري للتوسيط في نص الصفحة بالظبط */
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap; /* عشان العنوان ميتكسرش لو الكلام كتير */
 }
 
 /* تنسيقات اللوجو */
 .header-logo {
     display: flex;
     align-items: center;
+    /* لو عايز اللوجو يكون على الشمال خالص في صفحة عربي */
+    margin-right: auto; 
 }
 
 #companyLogo {
-    height: 85px; /* كبرنا الارتفاع قليلاً ليكون اللوجو أوضح */
+    height: 85px; 
     width: auto;
     max-width: 250px;
     object-fit: contain;
-    /* فلتر لجعل اللوجو "ينطق" على الخلفية الغامقة */
     filter: drop-shadow(0px 0px 5px rgba(255,255,255,0.4)); 
-    transition: transform 0.3s ease; /* تأثير بسيط عند المرور بالماوس */
+    transition: transform 0.3s ease;
     padding: 5px 0;
 }
 
 #companyLogo:hover {
-    transform: scale(1.05); /* تكبير خفيف عند الوقوف عليه بالماوس */
+    transform: scale(1.05);
 }
 
 /* --- قسم الفلاتر (Filters Bar) --- */
