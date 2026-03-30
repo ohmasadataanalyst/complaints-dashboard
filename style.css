@@ -272,84 +272,74 @@ tr:hover { background: #2d2d2d; }
 .btn-primary:hover { background: #b71c1c; }
 
 /* ==========================================================
-   تنسيقات شاشات الموبايل (أصغر من 768px)
+   تنسيقات شاشات الموبايل (أصغر من 768px) - النسخة المصححة
    ========================================================== */
 @media screen and (max-width: 768px) {
     body {
-        padding: 10px; /* تقليل المسافات الجانبية للصفحة كلها */
+        padding: 5px; 
     }
 
-    /* 1. ضبط الهيدر (اللوجو والعنوان) */
+    /* 1. الهيدر: اللوجو فوق والعنوان تحت */
     .main-header {
-        flex-direction: column; /* جعل اللوجو والعنوان تحت بعض */
-        padding: 15px;
+        flex-direction: column !important;
+        padding: 20px 10px !important;
         text-align: center;
-        min-height: auto; /* الغاء الارتفاع الثابت القديم */
+        min-height: auto !important;
     }
 
     .main-header h1 {
-        position: static; /* الغاء التوسيط المطلق القديم */
-        transform: none; /* الغاء التوسيط المطلق القديم */
-        font-size: 18px; /* تصغير الخط قليلاً */
-        margin-top: 10px; /* مسافة بين اللوجو والعنوان */
+        position: static !important; /* إلغاء التوسيط المطلق */
+        transform: none !important;
+        font-size: 18px !important;
+        margin-top: 15px !important;
+        white-space: normal !important; /* السماح للعنوان بالنزول لسطر جديد لو طويل */
     }
 
     .header-logo {
-        margin: 0; /* الغاء الهوامش القديمة */
+        margin: 0 !important;
     }
 
     #companyLogo {
-        height: 60px; /* تصغير اللوجو قليلاً */
+        height: 65px !important; /* حجم أنسب للموبايل */
     }
 
-    /* 2. ضبط حاويات الفلاتر والرسوم البيانية */
-    .filters-container,
-    .charts-container,
-    .table-container {
-        grid-template-columns: 1fr !important; /* جعل أي شبكة (Grid) عمود واحد فقط */
-        display: flex;
-        flex-direction: column; /* رص العناصر تحت بعض */
+    /* 2. الفلاتر: كل فلتر ياخد سطر لوحده */
+    .filters-bar {
+        flex-direction: column !important;
         padding: 15px !important;
-        margin-bottom: 15px;
+        gap: 10px !important;
     }
 
-    /* 3. ضبط عناصر الفلاتر الفردية */
-    .filter-item {
-        width: 100%; /* الفلتر ياخد عرض الشاشة كلها */
-        margin-bottom: 10px;
-    }
-
-    .filter-item select, 
-    .filter-item input {
-        width: 100%; /* القائمة المدسدلة وحقل التاريخ ياخدوا العرض الكامل */
-        box-sizing: border-box; /* عشان الـ padding ميخربش العرض */
-    }
-
-    /* زرار إعادة الضبط (Reset) */
-    button#resetFilters {
-        width: 100%; /* الزرار ياخد العرض الكامل */
-        margin-top: 10px;
-    }
-
-    /* 4. ضبط الرسوم البيانية والجداول */
-    .chart-box,
-    .table-box {
+    .slicer {
         width: 100% !important;
-        margin: 0 0 15px 0 !important;
+        min-width: unset !important;
+        flex: none !important;
     }
 
-    /* يسمح بالتمرير الأفقي للجداول الطويلة (زي صورة التفاصيل) */
-    .data-table-wrapper {
-        overflow-x: auto;
+    .btn-reset {
+        max-width: 100% !important; /* الزرار ياخد العرض كامل */
+        width: 100%;
+        margin-top: 10px !important;
     }
 
-    table.data-table {
-        min-width: 600px; /* يضمن إن الجدول ميتعصرش، ويسمح بالتمرير */
-        font-size: 14px; /* تصغير خط الجدول */
+    /* 3. الشارتات (الفانلز): تترص تحت بعض */
+    .funnels-section {
+        grid-template-columns: 1fr !important; /* عمود واحد */
+        gap: 15px !important;
     }
 
-    /* تنسيقات العناوين داخل الداشبورد */
-    .chart-title {
-        font-size: 16px;
+    /* 4. الجداول: أهم جزء للموبايل */
+    .table-container, .raw-table-container {
+        overflow-x: auto !important; /* تفعيل التمرير الأفقي */
+        -webkit-overflow-scrolling: touch;
+    }
+
+    table {
+        min-width: 800px; /* إجبار الجدول يحافظ على عرضه عشان الداتا متتداخلش، والمستخدم يمرر يمين وشمال */
+    }
+
+    td, th {
+        padding: 10px 8px !important;
+        font-size: 12px !important; /* تصغير الخط قليلاً */
     }
 }
