@@ -253,30 +253,51 @@ function renderLineChart(data) {
     const values = sortedDates.map(d => timeData[d]);
 
     const option = {
-        tooltip: { trigger: 'axis', backgroundColor: 'rgba(20, 20, 20, 0.9)', textStyle: { color: '#eee' } },
-        grid: { left: '4%', right: '4%', bottom: '18%', containLabel: true },
+        tooltip: { 
+            trigger: 'axis', 
+            backgroundColor: 'rgba(20, 20, 20, 0.9)', 
+            textStyle: { color: '#eee' },
+            confine: true // يمنع التولتيب يخرج بره الشاشة في الموبايل
+        },
+        grid: { left: '3%', right: '4%', bottom: '15%', containLabel: true },
+        // إضافة الـ DataZoom بيسمح للمستخدم "يزق" الشارت يمين وشمال لو الداتا كتير
+        dataZoom: [
+            {
+                type: 'inside', // يسمح بالـ Zoom عن طريق اللمس (Pinch)
+                start: 70,      // يبدأ بعرض آخر 30% من البيانات فقط لتقليل الزحمة
+                end: 100
+            }
+        ],
         xAxis: { 
             type: 'category', 
             data: sortedDates, 
+            axisTick: { show: false }, // شيل الشرطات الصغيرة
             axisLabel: { 
                 color: '#aaa', 
                 fontSize: 10,
+                hideOverlap: true, // سحر ECharts: بيخفي اللي داخل في بعضه أوتوماتيك
                 formatter: (value) => {
                     const date = new Date(value);
+                    // عرض اليوم والشهر فقط للاختصار
                     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-                    return `${monthNames[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
+                    return `${monthNames[date.getMonth()]} ${date.getDate()}`;
                 }
             } 
         },
-        yAxis: { type: 'value', splitLine: { lineStyle: { color: '#222' } }, axisLabel: { color: '#888' } },
+        yAxis: { 
+            type: 'value', 
+            splitLine: { lineStyle: { color: '#222' } }, 
+            axisLabel: { color: '#888', fontSize: 10 } 
+        },
         series: [{
             name: 'عدد الشكاوى اليومية',
             type: 'line',
-            smooth: true,
-            symbol: 'none',
+            smooth: true,      // بيخلي الخط انسيابي (بيقلل حدة الـ Noise)
+            symbol: 'circle',  // يظهر نقطة فقط عند الوقوف بالماوس
+            showSymbol: false,
             lineStyle: { width: 2, color: '#d32f2f' },
             areaStyle: {
-                opacity: 0.1,
+                opacity: 0.2, // زيادة الشفافية شوية عشان تدي "كتلة" للخط
                 color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
                     { offset: 0, color: '#d32f2f' },
                     { offset: 1, color: 'transparent' }
@@ -285,10 +306,6 @@ function renderLineChart(data) {
             data: values
         }]
     };
-    myChart.setOption(option, true);
-    myCharts['line'] = myChart;
-}
-
 // 8. رسم الـ Funnel Charts
 function renderFunnel(id, data, column) {
     const chartDom = document.getElementById(id);
