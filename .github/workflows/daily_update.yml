@@ -1,0 +1,30 @@
+name: Complain Daily update 
+
+on:
+  schedule:
+    # الكود ده بيشغله الساعة 5:00 الصبح بتوقيت جرينتش (8:00 صباحاً بتوقيت الرياض)
+    - cron: '0 5 * * *'
+  workflow_dispatch: # ده بيخليك تقدر تشغله يدوي بضغط زرار للتجربة
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository Code
+        uses: actions/checkout@v3
+
+      - name: Setup Python Environment
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install Libraries from Requirements
+        run: |
+          pip install -r requirements.txt
+
+      - name: Execute Python Script
+        env:
+          ZENPUT_API_KEY: ${{ secrets.ZENPUT_API_KEY }}
+          GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+        run: python main.py
