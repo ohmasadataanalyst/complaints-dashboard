@@ -1,14 +1,14 @@
-// متغيرات لتخزين البيانات وكائنات الشارتات
+// Variables for storing data and chart objects
 let originalData = []; 
 let myCharts = {};    
 
-// --- الإعدادات الجديدة للربط التلقائي ---
+// Google sheet configuration 
 const API_KEY = 'AIzaSyANZIOWxCtxAcLVrFebSRF9xk93DvrUiCs';
 const SPREADSHEET_ID = '1avAzf7ROjVAy43_yDTfppUAhg6JdM191_wGeLOfICWA';
-const SHEET_NAME = 'Sheet1'; // تأكد أن هذا هو اسم الورقة داخل الملف
+const SHEET_NAME = 'Sheet1'; 
 const RANGE = `${SHEET_NAME}!A:Z`; 
 
-// 1. المحرك الرئيسي الجديد: جلب البيانات تلقائياً من Google Sheets عند تحميل الصفحة
+// 1. fetches data from Google Sheets when the page loads
 window.addEventListener('DOMContentLoaded', function() {
     fetchLiveSheetData();
 });
@@ -22,10 +22,10 @@ async function fetchLiveSheetData() {
         const data = await response.json();
 
         if (data.values && data.values.length > 1) {
-            const headers = data.values[0]; // الصف الأول هو العناوين
-            const rows = data.values.slice(1); // باقي الصفوف هي البيانات
+            const headers = data.values[0]; // first row is headers 
+            const rows = data.values.slice(1); 
 
-            // تحويل المصفوفة إلى تنسيق JSON (Object) بنفس أسماء الأعمدة القديمة
+             // Convert the array to JSON format (Object) using the same column names as before
             originalData = rows.map(row => {
                 let item = {};
                 headers.forEach((header, index) => {
@@ -36,28 +36,28 @@ async function fetchLiveSheetData() {
 
             console.log("✅ Data Loaded Successfully:", originalData.length, "rows");
             
-            // تشغيل الداشبورد تلقائياً
+            // Launch the dashboard automatically
             populateSlicers(originalData);
             updateDashboard(originalData);
             
         } else {
-            console.error("لم يتم العثور على بيانات في الشيت.");
+            console.error("No data found in the sheet.");
             alert("تنبيه: شيت البيانات فارغ حالياً.");
         }
     } catch (error) {
         console.error("❌ Error fetching data:", error);
-        alert("فشل الاتصال التلقائي بقاعدة البيانات. تأكد من إعدادات الـ API.");
+        alert("The automatic connection to the google sheet failed. Check your API settings.");
     }
 }
 
-// دالة معالجة التواريخ (تم تعديلها لتناسب نص التاريخ القادم من جوجل شيت)
+// Date handling function (modified to accommodate date text from Google Sheets)
 function parseExcelDate(dateValue) {
     if (!dateValue) return null;
     const date = new Date(dateValue);
     return isNaN(date.getTime()) ? null : date;
 }
 
-// 2. دالة تحديث جميع العناصر
+// 2. Function to refresh all elements
 function updateDashboard(data) {
     renderStatusDonut(data);
     renderLineChart(data);
@@ -69,7 +69,7 @@ function updateDashboard(data) {
     renderRawDataTable(data); 
 }
 
-// 3. نظام الفلاتر الذكي (Slicers)
+// 3.Slicers
 function populateSlicers(data) {
     const configs = [
         { id: 'branchSlicer', column: 'اختر الفرع', label: 'جميع الفروع' },
@@ -110,7 +110,7 @@ function populateSlicers(data) {
     });
 }
 
-// 4. منطق الفلترة التراكمي
+// 4. Cumulative filtering logic
 function filterData() {
     const branchVal = document.getElementById('branchSlicer').value;
     const typeVal = document.getElementById('typeSlicer').value;
@@ -143,7 +143,7 @@ function filterData() {
     updateDashboard(filtered);
 }
 
-// إعادة الضبط (Reset Filters)
+// Reset Filters
 function resetFilters() {
     const ids = ['branchSlicer', 'typeSlicer', 'managerSlicer'];
     ids.forEach(id => {
@@ -159,7 +159,7 @@ function resetFilters() {
     updateDashboard(originalData);
 }
 
-// 5. رسم الـ Donut Chart
+// 5. Donut Chart
 function renderStatusDonut(data) {
     const chartDom = document.getElementById('statusDonutChartV2');
     if (!chartDom) return;
@@ -170,7 +170,6 @@ function renderStatusDonut(data) {
     }
     myChart = echarts.init(chartDom);
 
-    // حساب البيانات بدقة
     const seenIds = new Set();
     const counts = {};
     let totalUniqueCount = 0;
@@ -192,10 +191,10 @@ function renderStatusDonut(data) {
     }));
 
     const option = {
-        // --- إضافة الـ Tooltip بالـ Dark Mode ---
+        
         tooltip: {
             trigger: 'item',
-            confine: true, // تضمن ظهورها داخل حدود الكارت
+            confine: true, 
             backgroundColor: 'rgba(30, 30, 30, 0.9)',
             borderWidth: 0,
             textStyle: { color: '#fff', fontSize: 12 },
@@ -254,7 +253,7 @@ function renderStatusDonut(data) {
     myCharts['donut'] = myChart; 
 }
 
-// 6. رسم الـ Line Chart (نسخة مصححة ومجربة)
+// 6. Line Chart
 function renderLineChart(data) {
     const chartDom = document.getElementById('lineChart');
     if (!chartDom) return;
@@ -335,7 +334,7 @@ function renderLineChart(data) {
     myChart.setOption(option, true);
     myCharts['line'] = myChart;
 }
-// 8. رسم الـ Funnel Charts
+// 8. Funnel Charts
 function renderFunnel(id, data, column) {
     const chartDom = document.getElementById(id);
     if (!chartDom) return;
@@ -393,7 +392,7 @@ function renderFunnel(id, data, column) {
     myCharts[id] = myChart;
 }
 
-// 8. جدول المتصدرين
+// 8. Top 15 table
 function renderLeaderboard(data) {
     const tbody = document.querySelector('#branchLeaderboard tbody');
     if (!tbody) return;
@@ -418,7 +417,7 @@ function renderLeaderboard(data) {
     });
 }
 
-// 9. جدول البيانات الخام
+// 9. Raw data table
 function renderRawDataTable(data) {
     const tbody = document.querySelector('#complainsRawTable tbody');
     const countBadge = document.getElementById('rawTableCount');
@@ -446,7 +445,7 @@ function renderRawDataTable(data) {
         const dObj = parseExcelDate(item['التاريخ']);
         const formattedDate = dObj ? dObj.toLocaleDateString('ar-EG') : '-';
         
-        // تم حذف أعمدة مدير المنطقة والمنتج من الـ innerHTML
+        // The “Region Manager” and “Product” columns have been removed from the innerHTML
         tr.innerHTML = `
             <td>${item['INDEX']}</td>
             <td>${item['اختر الفرع'] || '-'}</td>
