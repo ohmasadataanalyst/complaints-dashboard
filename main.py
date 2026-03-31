@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 from google.oauth2.service_account import Credentials
 from gspread_dataframe import set_with_dataframe
 
-# --- 1. سحب المفاتيح من GitHub Secrets بدل userdata ---
+# --- 1.GitHub Secrets ---
 API_KEY = os.getenv('ZENPUT_API_KEY')
 GOOGLE_JSON_CREDENTIALS = os.getenv('GOOGLE_CREDENTIALS')
 
@@ -21,7 +21,7 @@ TEMPLATE_ID = 512247
 TZ = pytz.timezone("Asia/Baghdad")
 GOOGLE_SHEET_ID = "1avAzf7ROjVAy43_yDTfppUAhg6JdM191_wGeLOfICWA"
 
-# --- AUTHENTICATION SETUP (GITHUB VERSION) ---
+# --- AUTHENTICATION SETUP ---
 def get_gspread_client():
     if not GOOGLE_JSON_CREDENTIALS:
         sys.exit("❌ Error: GOOGLE_CREDENTIALS secret not found!")
@@ -39,11 +39,10 @@ def get_gspread_client():
     except Exception as e:
         sys.exit(f"❌ Authentication failed: {e}")
 
-# استخدام العميل الجديد
 gc = get_gspread_client()
 print("✅ Authentication successful via GitHub Secrets!")
 
-# --- MAPPING CONFIGURATION (نفس الكود الأصلي بدون تغيير) ---
+# --- MAPPING CONFIGURATION ---
 RAW_BRANCH_MAPPING_DATA = """
 2197299 "LBRUH   B07"
 2239240 FYJED  B32
