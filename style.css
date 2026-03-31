@@ -1,8 +1,8 @@
 /* ==========================================================
-   1. الإعدادات العامة والتأسيس - منع السكرول الأفقي العام
+   1. General Settings and Configuration - Disable General Horizontal Scrolling
    ========================================================== */
 * {
-    box-sizing: border-box; /* أهم سطر لمنع تمدد العناصر بسبب الـ Padding */
+    box-sizing: border-box; /*preventing elements from expanding due to padding*/
 }
 
 html, body {
@@ -16,7 +16,7 @@ html, body {
 body {
     background-color: #121212;
     color: #e0e0e0;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* system-ui*/
     direction: rtl;
 }
 
@@ -28,7 +28,7 @@ body {
 }
 
 /* ==========================================================
-   2. الهيدر (Header) - مرونة كاملة
+   2. Header
    ========================================================== */
 .main-header {
     background-color: #1a1a1a; 
@@ -68,17 +68,17 @@ body {
 }
 
 /* ==========================================================
-   3. الفلاتر (Filters Bar) - مُحسنة للكمبيوتر
+   3.Filters Bar
    ========================================================== */
 .filters-bar {
-    display: grid; /* استخدام الشبكة لتوزيع احترافي */
-    grid-template-columns: repeat(4, 1fr) 150px; /* 4 فلاتر متساوية + زر صغير */
+    display: grid; 
+    grid-template-columns: repeat(4, 1fr) 150px;
     gap: 20px;
     background: #1e1e1e;
     padding: 20px;
     border-radius: 8px;
     margin-bottom: 30px;
-    align-items: end; /* محاذاة الفلاتر مع الزرار من الأسفل */
+    align-items: end;
 }
 
 .slicer {
@@ -109,7 +109,7 @@ body {
     border: none;
     border-radius: 6px;
     cursor: pointer;
-    height: 40px; /* متناسق مع ارتفاع السلكت */
+    height: 40px;
     width: 100%;
     font-weight: 600;
     transition: background 0.3s;
@@ -121,7 +121,7 @@ body {
 }
 
 /* ==========================================================
-   4. الكروت والجداول
+   4.Cards and tables
    ========================================================== */
 .card {
     background: #1e1e1e;
@@ -175,7 +175,7 @@ th, td {
 }
 
 /* ==========================================================
-   6. التنسيق للموبايل (Responsive Design)
+   6.Responsive Design
    ========================================================== */
 @media screen and (max-width: 768px) {
     .dashboard-container {
@@ -206,11 +206,10 @@ th, td {
         height: 60px !important;
     }
 
-    /* إصلاح الفلاتر للموبايل */
     .filters-bar {
         display: flex !important;
-        flex-direction: column !important; /* ترتيب رأسي */
-        grid-template-columns: none !important; /* إلغاء نظام الشبكة */
+        flex-direction: column !important; 
+        grid-template-columns: none !important;
         justify-content: flex-start !important;
         gap: 15px !important;
         padding: 15px !important;
@@ -219,10 +218,10 @@ th, td {
     .btn-reset {
         width: 100% !important;
         margin-top: 10px !important;
-        order: 99; /* لضمان وجوده في الأسفل */
+        order: 99; 
     }
 
-    /* إصلاح جداول الموبايل */
+   
     #branchLeaderboard {
         min-width: 450px !important; 
     }
