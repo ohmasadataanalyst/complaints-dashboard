@@ -123,6 +123,17 @@ body {
 /* ==========================================================
    4.Cards and tables
    ========================================================== */
+.funnels-section {
+    display: flex;
+    gap: 20px;
+    justify-content: space-between;
+    align-items: stretch;
+}
+
+.funnels-section .card {
+    flex: 1;
+}
+
 .card {
     background: #1e1e1e;
     border-radius: 12px;
@@ -234,6 +245,10 @@ th, td {
 
     #complainsRawTable {
         min-width: 550px !important;
+    }
+
+   .funnels-section {
+        flex-direction: column;
     }
 
     .card {
