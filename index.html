@@ -4,134 +4,216 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Complains Dashboard - AOF Group</title>
-    <!-- CSS File -->
     <link rel="stylesheet" href="style.css">
-    <!-- Flatpickr lib  -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    <!-- sheetjs / xlsx lib  -->
     <link rel="stylesheet" type="text/css" href="https://npmcdn.com/flatpickr/dist/themes/dark.css">
     <link rel="icon" type="image/png" sizes="32x32" href="favicon.png">
-    
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <!-- Echarts lib -->
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
 </head>
 <body>
-    <!-- Start Dashboard main header section -->
-    <header class="main-header">
-        <h2 style="color: #d32f2f; margin: 0;">داشبورد تحليل شكاوي العملاء</h2>
-        <div class="header-logo">
-            <img src="Logo.png" alt="لوجو الشركة" id="companyLogo">
-        </div>
-        <!-- <div class="upload-section">
-            <input type="file" id="excelFile" accept=".xlsx, .xls" hidden>
-            <!-- <button class="btn-primary" onclick="document.getElementById('excelFile').click()">+ رفع ملف البيانات</button> -->
-        <!-- </div> --> 
-    </header>
-    <!-- End Dashboard main header section -->
 
-    <!-- Start main container -->
-    <div class="dashboard-container">
-        <!-- Start Slicers section -->
-        <section class="filters-bar">
-            <div class="slicer">
-                <label>نطاق التاريخ</label>
-                <input type="text" id="datePicker" placeholder="اختر الفترة.." readonly>
-            </div>
-            <div class="slicer">
-                <label>الفرع</label>
-                <select id="branchSlicer"><option value="all">الكل</option></select>
-            </div>
-            <div class="slicer">
-                <label>نوع الشكوى</label>
-                <select id="typeSlicer"><option value="all">الكل</option></select>
-            </div>
-            <div class="slicer">
-                <label>مدير المنطقة</label>
-                <select id="managerSlicer"><option value="all">الكل</option></select>
-            </div>
-            <button class="btn-reset" onclick="resetFilters()">RESET</button>
-        </section>
-        <!-- End Slicers section -->
-        <!-- start line chart section -->
-        <div class="card full-width">
-            <h3>تطور الشكاوى (الخط الزمني)</h3>
-            <div id="lineChart" style="width: 100%; height: 400px;"></div>
+    <!-- ===== LOGIN SCREEN ===== -->
+    <div class="login-overlay" id="loginOverlay">
+        <div class="login-box">
+            <div class="login-logo">📊</div>
+            <h1>AOF Group</h1>
+            <p>داشبورد تحليل شكاوي العملاء</p>
+            <input type="text" id="loginUsername" placeholder="اسم المستخدم" autocomplete="username">
+            <input type="password" id="loginPassword" placeholder="كلمة المرور" autocomplete="current-password">
+            <button class="login-btn" onclick="handleDashboardLogin()">تسجيل الدخول</button>
+            <div class="login-error" id="loginError"></div>
         </div>
-        <!-- end line chart section -->
-        <!-- start donut chart section -->
-        <div class="card full-width">
-            <h3>إجمالي الحالات حسب الإجراء</h3>
-            <div class="donut-container">
-                <div id="statusDonutChartV2" style="width: 100%; height: 450px;"></div>
-            </div>
-        </div>
-        <!-- end donut chart section -->
-        <!-- start funnel section -->
-        <div class="funnels-section">
-            <div class="card">
-                <h3>الجودة</h3>
-                <div id="qualityFunnel" style="width: 100%; height: 350px;"></div>
-            </div>
-            <div class="card">
-                <h3>نوع الشكوى</h3>
-                <div id="typeFunnel" style="width: 100%; height: 350px;"></div>
-            </div>
-            <div class="card">
-                <h3>المنتج</h3>
-                <div id="productFunnel" style="width: 100%; height: 350px;"></div>
-            </div>
-        </div>
-        <!-- end funnel section -->
-        <!-- start top_branch_table section -->
-        <div class="card full-width-table" style="margin-top: 25px;">
-            <div class="card-header-flex">
-                <h3>أعلى الفروع شكاوي (Top 15)</h3>
-            </div>
-            <div class="table-container">
-                <table id="branchLeaderboard">
-                    <thead>
-                        <tr>
-                            <th style="width: 50px;">#</th>
-                            <th>اسم الفرع</th>
-                            <th style="text-align: center;">إجمالي الشكاوى</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        <!-- end top_branch_table section -->
-        <!-- start raw_data_table section -->
-        <div class="card full-raw-data-card" style="margin-top: 25px;">
-            <div class="card-header-flex">
-                <h3>تفاصيل الشكاوى المسجلة ( شكاوى العملاء )</h3>
-                <!-- <span class="badge" id="rawTableCount" style="display: none;">يتم التحميل...</span> -->
-            </div>
-            
-            <div class="raw-table-container">
-                <table id="complainsRawTable">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>الفرع</th>
-                            <th>نوع الشكوى</th>
-                            <th>محتوى شكوى العميل</th>
-                            <th>التاريخ</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        <!-- end row_data_table section -->
-
     </div>
-    <!-- end main container -->
 
+    <!-- ===== PERIOD COMPARISON MODAL ===== -->
+    <div class="modal-overlay" id="comparisonModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h2>📅 مقارنة الفترات الزمنية</h2>
+                <button class="modal-close" onclick="closeComparisonModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="period-pickers">
+                    <div class="period-picker-group">
+                        <div class="period-title" style="color:#42a5f5;">🔵 الفترة الأولى</div>
+                        <label>من</label>
+                        <input type="text" class="period-date-input" id="periodAStart" placeholder="اختر تاريخ البداية" readonly>
+                        <label style="margin-top:10px;">إلى</label>
+                        <input type="text" class="period-date-input" id="periodAEnd" placeholder="اختر تاريخ النهاية" readonly>
+                    </div>
+                    <div class="period-picker-group">
+                        <div class="period-title" style="color:#ef5350;">🔴 الفترة الثانية</div>
+                        <label>من</label>
+                        <input type="text" class="period-date-input" id="periodBStart" placeholder="اختر تاريخ البداية" readonly>
+                        <label style="margin-top:10px;">إلى</label>
+                        <input type="text" class="period-date-input" id="periodBEnd" placeholder="اختر تاريخ النهاية" readonly>
+                    </div>
+                </div>
+
+                <button class="btn-compare" onclick="runComparison()">
+                    <span>⚡</span>
+                    <span>تشغيل المقارنة</span>
+                </button>
+
+                <div class="comparison-results" id="comparisonResults">
+                    <!-- populated by JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== MAIN APP ===== -->
+    <div id="mainApp">
+        <header class="main-header">
+            <h2 style="color: #d32f2f; margin: 0;">داشبورد تحليل شكاوي العملاء</h2>
+            <div class="header-actions">
+                <button class="btn-comparison" onclick="openComparisonModal()">
+                    📅 مقارنة الفترات
+                </button>
+            </div>
+            <div class="header-logo">
+                <img src="Logo.png" alt="لوجو الشركة" id="companyLogo">
+            </div>
+        </header>
+
+        <div class="dashboard-container">
+            <!-- Filters -->
+            <section class="filters-bar">
+                <div class="slicer">
+                    <label>نطاق التاريخ</label>
+                    <input type="text" id="datePicker" placeholder="اختر الفترة.." readonly>
+                </div>
+                <div class="slicer" id="slicer-branch">
+                    <select id="branchSlicer"><option value="all">الكل</option></select>
+                </div>
+                <div class="slicer" id="slicer-type">
+                    <select id="typeSlicer"><option value="all">الكل</option></select>
+                </div>
+                <div class="slicer" id="slicer-product">
+                    <select id="productSlicer"><option value="all">الكل</option></select>
+                </div>
+                <div class="slicer" id="slicer-manager">
+                    <select id="managerSlicer"><option value="all">الكل</option></select>
+                </div>
+                <button class="btn-reset" onclick="resetFilters()">RESET</button>
+            </section>
+
+            <!-- Line Chart -->
+            <div class="card full-width">
+                <h3>تطور الشكاوى (الخط الزمني)</h3>
+                <div id="lineChart" style="width: 100%; height: 400px;"></div>
+            </div>
+
+            <!-- Donut Chart -->
+            <div class="card full-width">
+                <h3>إجمالي الحالات حسب الإجراء</h3>
+                <div class="donut-container">
+                    <div id="statusDonutChartV2" style="width: 100%; height: 450px;"></div>
+                </div>
+            </div>
+
+            <!-- Funnels -->
+            <div class="funnels-section">
+                <div class="card">
+                    <h3>الجودة</h3>
+                    <div id="qualityFunnel" style="width: 100%; height: 350px;"></div>
+                </div>
+                <div class="card">
+                    <h3>نوع الشكوى</h3>
+                    <div id="typeFunnel" style="width: 100%; height: 350px;"></div>
+                </div>
+                <div class="card">
+                    <h3>المنتج</h3>
+                    <div id="productFunnel" style="width: 100%; height: 350px;"></div>
+                </div>
+            </div>
+
+            <!-- Compensation Card -->
+            <div class="compensation-card" id="compensationCard">
+                <div class="comp-icon">💰</div>
+                <div class="comp-info">
+                    <div class="comp-label">إجمالي قيمة التعويضات (حسب الفلاتر المطبقة)</div>
+                    <div class="comp-value" id="compValue">يتم التحميل...</div>
+                    <div class="comp-sub" id="compSub">—</div>
+                </div>
+                <div class="comp-badge" id="compBadge">كل الفترات</div>
+            </div>
+
+            <!-- Top 15 Branches -->
+            <div class="card full-width-table" style="margin-top: 25px;">
+                <div class="card-header-flex">
+                    <h3>أعلى الفروع شكاوي (Top 15)</h3>
+                </div>
+                <div class="table-container">
+                    <table id="branchLeaderboard">
+                        <thead>
+                            <tr>
+                                <th style="width: 50px;">#</th>
+                                <th>اسم الفرع</th>
+                                <th style="text-align: center;">إجمالي الشكاوى</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Raw Data Table -->
+            <div class="card full-raw-data-card" style="margin-top: 25px;">
+                <div class="card-header-flex">
+                    <h3>تفاصيل الشكاوى المسجلة ( شكاوى العملاء )</h3>
+                </div>
+                <div class="raw-table-container">
+                    <table id="complainsRawTable">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>الفرع</th>
+                                <th>نوع الشكوى</th>
+                                <th>محتوى شكوى العميل</th>
+                                <th>التاريخ</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function handleDashboardLogin() {
+            const user = document.getElementById('loginUsername').value.trim();
+            const pass = document.getElementById('loginPassword').value;
+            const errorEl = document.getElementById('loginError');
+            if (user === 'admin' && pass === 'aofadmin2026') {
+                document.getElementById('loginOverlay').classList.add('hidden');
+                document.getElementById('mainApp').classList.add('visible');
+            } else {
+                errorEl.textContent = 'اسم المستخدم أو كلمة المرور غير صحيحة';
+                document.getElementById('loginPassword').value = '';
+            }
+        }
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !document.getElementById('loginOverlay').classList.contains('hidden')) {
+                handleDashboardLogin();
+            }
+        });
+
+        function openComparisonModal() {
+            document.getElementById('comparisonModal').classList.add('open');
+            initComparisonDatePickers();
+        }
+        function closeComparisonModal() {
+            document.getElementById('comparisonModal').classList.remove('open');
+        }
+        // Close modal clicking outside box
+        document.getElementById('comparisonModal').addEventListener('click', function(e) {
+            if (e.target === this) closeComparisonModal();
+        });
+    </script>
     <script src="script.js"></script>
 </body>
 </html>
