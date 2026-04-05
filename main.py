@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 from google.oauth2.service_account import Credentials
 from gspread_dataframe import set_with_dataframe
 
-# --- 1.GitHub Secrets ---
+# --- 1. GitHub Secrets ---
 API_KEY = os.getenv('ZENPUT_API_KEY')
 GOOGLE_JSON_CREDENTIALS = os.getenv('GOOGLE_CREDENTIALS')
 
@@ -25,11 +25,10 @@ GOOGLE_SHEET_ID = "1avAzf7ROjVAy43_yDTfppUAhg6JdM191_wGeLOfICWA"
 def get_gspread_client():
     if not GOOGLE_JSON_CREDENTIALS:
         sys.exit("❌ Error: GOOGLE_CREDENTIALS secret not found!")
-    
     try:
         creds_dict = json.loads(GOOGLE_JSON_CREDENTIALS)
         creds = Credentials.from_service_account_info(
-            creds_dict, 
+            creds_dict,
             scopes=[
                 "https://www.googleapis.com/auth/spreadsheets",
                 "https://www.googleapis.com/auth/drive"
@@ -141,7 +140,8 @@ def fetch_submissions(template_id):
     limit = 50
     max_records = 9000
     fetch_start_date = "2025-01-01"
-    
+    print(f"📅 Fetching all submissions from {fetch_start_date} onwards...")
+
     while len(subs) < max_records:
         try:
             params = {
@@ -150,12 +150,28 @@ def fetch_submissions(template_id):
                 "start": start,
                 "date_submitted_start": fetch_start_date
             }
-            resp = requests.get("https://www.zenput.com/api/v3/submissions/", headers=zenput_headers(), params=params)
+            print(f"📦 Requesting batch {start // limit + 1}...")
+            resp = requests.get(
+                "https://www.zenput.com/api/v3/submissions/",
+                headers=zenput_headers(),
+                params=params
+            )
+
+            if resp.status_code == 400 and "LIMIT" in str(resp.text):
+                print("⚠️ Hit API limit, trying smaller batch size...")
+                limit = max(10, limit // 2)
+                continue
+
             if resp.status_code != 200:
+                print(f"❌ Error fetching submissions: HTTP {resp.status_code} - {resp.text}")
                 break
+
             batch = resp.json().get("data", [])
-            if not batch: break
-            
+            if not batch:
+                print("📝 No more submissions to fetch")
+                break
+
+            print(f"📊 Processing batch of {len(batch)} submissions...")
             batch_filtered = []
             for s in batch:
                 submitted_date = s["smetadata"]["date_submitted_local"]
@@ -163,14 +179,27 @@ def fetch_submissions(template_id):
                 is_2026_apr = submitted_date.startswith("2026-") and submitted_date <= "2026-04-30"
                 if is_2025 or is_2026_apr:
                     batch_filtered.append(s)
+
             subs.extend(batch_filtered)
+            print(f"✅ Found {len(batch_filtered)} submissions in the target period (total: {len(subs)})")
             start += limit
-        except Exception:
+
+            if start > max_records:
+                print(f"⚠️ Reached safety limit at {start} records")
+                break
+
+        except Exception as e:
+            print(f"❌ Unexpected error: {e}")
             break
+
+    print(f"🎯 Final result: {len(subs)} submissions from the target period")
     return subs
 
 def submissions_to_filtered_df(subs):
-    if not subs: return pd.DataFrame()
+    if not subs:
+        print("⚠️ No submissions to process")
+        return pd.DataFrame()
+
     rows = []
     for original_id, s in enumerate(subs, 1):
         try:
@@ -189,53 +218,88 @@ def submissions_to_filtered_df(subs):
                 "مدى الاجراء المتخذ": answers.get("مدى الاجراء المتخذ", ""),
                 "مصدر الشكوى": answers.get("مصدر الشكوى", ""),
                 "تم الطلب من خلال": answers.get("تم الطلب من خلال", ""),
+                "قيمة التعويض": answers.get("قيمة التعويض", ""),  # ✅ NEW FIELD
             }
             rows.append(row)
-        except Exception: continue
+        except Exception as e:
+            print(f"⚠️ Error processing submission {original_id}: {e}")
+            continue
+
+    if not rows:
+        print("⚠️ No valid rows after processing")
+        return pd.DataFrame()
 
     df = pd.DataFrame(rows)
+
     def clean_value(value):
-        if isinstance(value, list): return ', '.join(str(v).strip() for v in value if str(v).strip())
-        return str(value).strip() if not pd.isna(value) else ""
+        if isinstance(value, list):
+            return ', '.join(str(v).strip() for v in value if str(v).strip())
+        elif pd.isna(value):
+            return ""
+        return str(value).strip()
 
     for col in df.columns:
-        if col != 'original_id': df[col] = df[col].apply(clean_value)
+        if col != 'original_id':
+            df[col] = df[col].apply(clean_value)
 
     df['التاريخ'] = pd.to_datetime(df['التاريخ'], errors='coerce').dt.strftime('%Y-%m-%d')
     df['مدى الاجراء المتخذ'] = df['مدى الاجراء المتخذ'].apply(lambda x: x.split(',')[0].strip())
     df['مدى الاجراء المتخذ'].replace('', 'لم يتم المراجعة', inplace=True)
 
-    cols_to_explode = ['نوع الشكوى', 'فى حاله كانت الشكوى جوده برجاء تحديد نوع الشكوى', 'الشكوى على اي منتج؟']
+    # ✅ Convert compensation to numeric
+    df['قيمة التعويض'] = pd.to_numeric(df['قيمة التعويض'], errors='coerce').fillna(0)
+
+    cols_to_explode = [
+        'نوع الشكوى',
+        'فى حاله كانت الشكوى جوده برجاء تحديد نوع الشكوى',
+        'الشكوى على اي منتج؟'
+    ]
     for col in cols_to_explode:
-        df[col] = df[col].str.split(',\s*')
+        df[col] = df[col].str.split(r',\s*')
         df = df.explode(col)
 
     quality_col = 'فى حاله كانت الشكوى جوده برجاء تحديد نوع الشكوى'
-    df[quality_col] = df[quality_col].fillna('لا علاقة لها بالجودة').replace('', 'لا علاقة لها بالجودة')
+    df[quality_col] = df[quality_col].fillna('لا علاقة لها بالجودة')
+    df[quality_col].replace('', 'لا علاقة لها بالجودة', inplace=True)
+
     df.rename(columns={'original_id': 'INDEX'}, inplace=True)
     df = df[['INDEX'] + [c for c in df.columns if c != 'INDEX']]
+    print(f"📊 DataFrame created with {len(df)} rows")
     return df.reset_index(drop=True)
 
 def write_to_google_sheet(df, gc_client):
+    print(f"ℹ️ Opening Google Sheet by ID: {GOOGLE_SHEET_ID}")
     try:
         spreadsheet = gc_client.open_by_key(GOOGLE_SHEET_ID)
         worksheet = spreadsheet.get_worksheet(0)
-        header = worksheet.row_values(1) or list(df.columns)
-        worksheet.clear()
-        worksheet.update('A1', [header])
-        set_with_dataframe(worksheet, df.fillna(''), row=2, col=1, include_index=False, include_column_header=False)
-        print(f"✅ Successfully updated {len(df)} rows.")
+    except gspread.exceptions.SpreadsheetNotFound:
+        print("❌ ERROR: Spreadsheet not found.")
+        return
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"❌ An error occurred when opening the Google Sheet: {e}")
+        return
+
+    print("ℹ️ Clearing old data and writing new data with headers...")
+    worksheet.clear()
+    df_for_gsheet = df.fillna('')
+    print(f"ℹ️ Writing {len(df_for_gsheet)} rows to the sheet...")
+    # ✅ Write headers from row 1
+    set_with_dataframe(worksheet, df_for_gsheet, row=1, col=1, include_index=False, include_column_header=True)
+    print(f"✅ Successfully wrote {len(df_for_gsheet)} rows to Google Sheet.")
 
 # --- Main Flow ---
 if __name__ == "__main__":
     print("🚀 Starting Sync...")
     try:
         submissions = fetch_submissions(TEMPLATE_ID)
-        if submissions:
+        if not submissions:
+            print("ℹ️ No submissions found for the target period. Nothing to process.")
+        else:
+            print(f"📊 Found {len(submissions)} submissions. Processing data...")
             df_final = submissions_to_filtered_df(submissions)
-            if not df_final.empty:
+            if df_final.empty:
+                print("ℹ️ DataFrame is empty after processing. No data will be written.")
+            else:
                 write_to_google_sheet(df_final, gc)
         print("🏁 Finished.")
     except Exception as e:
