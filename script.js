@@ -637,4 +637,19 @@ function daysDiff(start, end) {
     return Math.round((new Date(end) - new Date(start)) / 86400000) + 1;
 }
 
-window.onresize = function() { Object.values(myCharts).forEach(function(c){ c.resize(); }); };
+
+// Resize charts on window resize
+window.onresize = function() {
+    Object.values(myCharts).forEach(function(c) { c.resize(); });
+};
+
+// Force charts to resize after full page render (fixes first-load sizing on PC)
+window.addEventListener('load', function() {
+    setTimeout(function() {
+        Object.values(myCharts).forEach(function(c) { c.resize(); });
+    }, 300);
+    // Second pass for slower connections
+    setTimeout(function() {
+        Object.values(myCharts).forEach(function(c) { c.resize(); });
+    }, 800);
+});

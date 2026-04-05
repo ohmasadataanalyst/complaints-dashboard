@@ -37,7 +37,7 @@ body {
     margin-bottom: 25px;
     border-radius: 8px;
     min-height: 100px;
-    position: relative;
+    /* NO position:relative — was causing chart width miscalculation */
 }
 
 .main-header h2 {
@@ -45,23 +45,23 @@ body {
     font-size: 22px;
     margin: 0;
     font-weight: 600;
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
     white-space: nowrap;
+    flex: 1;
+    text-align: center;
+    /* NO position:absolute — was causing layout reflow on first render */
 }
 
 .header-logo {
     display: flex;
     align-items: center;
-    margin-right: auto;
+    flex-shrink: 0;
 }
 
 .header-actions {
     display: flex;
     align-items: center;
     gap: 12px;
-    margin-left: 20px;
+    flex-shrink: 0;
 }
 
 #companyLogo {
@@ -69,7 +69,7 @@ body {
     width: auto;
     max-width: 200px;
     object-fit: contain;
-    mix-blend-mode: lighten; /* removes white background on dark bg */
+    mix-blend-mode: lighten;
 }
 
 .btn-comparison {
@@ -158,7 +158,7 @@ body {
     margin-bottom: 25px;
     box-shadow: 0 4px 20px rgba(0,0,0,0.4);
     width: 100%;
-    /* CRITICAL: no overflow:hidden here — it clips echarts tooltips/legends */
+    /* NO overflow:hidden — clips echarts tooltips and legends */
 }
 
 .card h3 {
@@ -369,7 +369,6 @@ tr:hover td { background: #242424; }
     border: 1px solid #333;
 }
 
-/* Logo in login - no white background */
 .login-logo {
     margin-bottom: 12px;
     display: flex;
@@ -381,8 +380,8 @@ tr:hover td { background: #242424; }
     width: auto;
     max-width: 220px;
     object-fit: contain;
-    mix-blend-mode: lighten;   /* removes white bg on dark surface */
-    filter: brightness(1.1);   /* slight boost so it pops */
+    mix-blend-mode: lighten;
+    filter: brightness(1.1);
 }
 
 .login-box h1 { color: #fff; margin: 0 0 6px; font-size: 1.8em; }
@@ -544,7 +543,7 @@ tr:hover td { background: #242424; }
     color: #aaa; font-weight: 600;
     border-bottom: 1px solid #333;
     text-align: center;
-    position: static; /* override sticky for modal tables */
+    position: static;
 }
 .comp-table td {
     padding: 10px 14px;
@@ -568,9 +567,11 @@ tr:hover td { background: #242424; }
         gap: 12px;
     }
     .main-header h2 {
-        position: relative !important; left: 0 !important;
-        transform: none !important; font-size: 16px !important;
-        white-space: normal !important; text-align: center;
+        font-size: 16px !important;
+        white-space: normal !important;
+        text-align: center;
+        flex: none;
+        width: 100%;
     }
     .header-logo { margin: 0 auto !important; }
     #companyLogo { height: 60px !important; }
