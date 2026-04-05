@@ -28,15 +28,15 @@ body {
    2. Header
    ========================================================== */
 .main-header {
-    background-color: #1a1a1a; 
-    padding: 20px 40px; 
+    background-color: #1a1a1a;
+    padding: 20px 40px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     border-bottom: 2px solid #333;
     margin-bottom: 25px;
-    border-radius: 8px; 
-    min-height: 100px; 
+    border-radius: 8px;
+    min-height: 100px;
     position: relative;
 }
 
@@ -54,7 +54,7 @@ body {
 .header-logo {
     display: flex;
     align-items: center;
-    margin-right: auto; 
+    margin-right: auto;
 }
 
 .header-actions {
@@ -65,10 +65,11 @@ body {
 }
 
 #companyLogo {
-    height: 85px; 
+    height: 85px;
     width: auto;
     max-width: 200px;
     object-fit: contain;
+    mix-blend-mode: lighten; /* removes white background on dark bg */
 }
 
 .btn-comparison {
@@ -95,7 +96,7 @@ body {
    3. Filters Bar
    ========================================================== */
 .filters-bar {
-    display: grid; 
+    display: grid;
     grid-template-columns: repeat(5, 1fr) 120px;
     gap: 16px;
     background: #1e1e1e;
@@ -114,8 +115,8 @@ body {
 }
 
 .slicer select, #datePicker {
-    width: 100%; 
-    padding: 10px; 
+    width: 100%;
+    padding: 10px;
     background: #2d2d2d;
     border: 1px solid #444;
     color: white;
@@ -146,8 +147,9 @@ body {
     gap: 20px;
     justify-content: space-between;
     align-items: stretch;
+    margin-bottom: 0;
 }
-.funnels-section .card { flex: 1; }
+.funnels-section .card { flex: 1; min-width: 0; }
 
 .card {
     background: #1e1e1e;
@@ -156,25 +158,26 @@ body {
     margin-bottom: 25px;
     box-shadow: 0 4px 20px rgba(0,0,0,0.4);
     width: 100%;
-    overflow: hidden; 
+    /* CRITICAL: no overflow:hidden here — it clips echarts tooltips/legends */
 }
 
 .card h3 {
-    text-align: center;        
-    width: 100%;              
-    margin-top: 0;            
-    margin-bottom: 20px;       
-    padding-bottom: 12px;      
-    border-bottom: 1px solid #333; 
-    color: #ffffff;            
-    font-size: 18px;           
-    font-weight: 600;          
+    text-align: center;
+    width: 100%;
+    margin-top: 0;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #333;
+    color: #ffffff;
+    font-size: 18px;
+    font-weight: 600;
 }
 
 .table-container, .raw-table-container {
     max-height: 500px;
     width: 100%;
-    overflow-x: auto; 
+    overflow-x: auto;
+    overflow-y: auto;
     border: 1px solid #333;
     border-radius: 6px;
 }
@@ -183,7 +186,7 @@ table {
     width: 100%;
     border-collapse: collapse;
     table-layout: fixed;
-    min-width: 600px; 
+    min-width: 600px;
 }
 
 th, td {
@@ -192,6 +195,17 @@ th, td {
     border-bottom: 1px solid #333;
     word-wrap: break-word;
 }
+
+th {
+    background: #242424;
+    color: #aaa;
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+tr:hover td { background: #242424; }
 
 #complainsRawTable td:nth-child(4) {
     min-width: 250px;
@@ -215,27 +229,11 @@ th, td {
     gap: 20px;
     box-shadow: 0 4px 20px rgba(0,0,0,0.4);
 }
-.comp-icon {
-    font-size: 2.4em;
-    flex-shrink: 0;
-}
+.comp-icon { font-size: 2.4em; flex-shrink: 0; }
 .comp-info { flex: 1; }
-.comp-label {
-    font-size: 13px;
-    color: #aaa;
-    margin-bottom: 4px;
-}
-.comp-value {
-    font-size: 2em;
-    font-weight: 700;
-    color: #d32f2f;
-    line-height: 1.1;
-}
-.comp-sub {
-    font-size: 12px;
-    color: #666;
-    margin-top: 4px;
-}
+.comp-label { font-size: 13px; color: #aaa; margin-bottom: 4px; }
+.comp-value { font-size: 2em; font-weight: 700; color: #d32f2f; line-height: 1.1; }
+.comp-sub { font-size: 12px; color: #666; margin-top: 4px; }
 .comp-badge {
     background: rgba(211,47,47,0.12);
     border: 1px solid rgba(211,47,47,0.3);
@@ -370,9 +368,25 @@ th, td {
     text-align: center;
     border: 1px solid #333;
 }
-.login-logo { font-size: 3em; margin-bottom: 8px; }
-.login-box h1 { color: #fff; margin-bottom: 6px; font-size: 1.8em; }
-.login-box p { color: #aaa; margin-bottom: 30px; font-size: 0.95em; }
+
+/* Logo in login - no white background */
+.login-logo {
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+#loginLogo {
+    height: 90px;
+    width: auto;
+    max-width: 220px;
+    object-fit: contain;
+    mix-blend-mode: lighten;   /* removes white bg on dark surface */
+    filter: brightness(1.1);   /* slight boost so it pops */
+}
+
+.login-box h1 { color: #fff; margin: 0 0 6px; font-size: 1.8em; }
+.login-box p { color: #aaa; margin: 0 0 30px; font-size: 0.95em; }
 .login-box input {
     width: 100%; padding: 14px 16px; margin-bottom: 16px;
     background: #2d2d2d; border: 1.5px solid #444;
@@ -506,9 +520,7 @@ th, td {
     margin-bottom: 8px;
 }
 .comp-kpi-val { text-align: center; }
-.comp-kpi-val .period-tag {
-    font-size: 10px; color: #aaa; margin-bottom: 3px;
-}
+.comp-kpi-val .period-tag { font-size: 10px; color: #aaa; margin-bottom: 3px; }
 .comp-kpi-val .val-num { font-size: 1.4em; font-weight: 700; }
 .period-a-color { color: #42a5f5; }
 .period-b-color { color: #ef5350; }
@@ -532,6 +544,7 @@ th, td {
     color: #aaa; font-weight: 600;
     border-bottom: 1px solid #333;
     text-align: center;
+    position: static; /* override sticky for modal tables */
 }
 .comp-table td {
     padding: 10px 14px;
@@ -552,31 +565,39 @@ th, td {
         flex-direction: column !important;
         padding: 15px !important;
         min-height: auto !important;
-        gap: 15px;
+        gap: 12px;
     }
     .main-header h2 {
         position: relative !important; left: 0 !important;
-        transform: none !important; font-size: 18px !important;
+        transform: none !important; font-size: 16px !important;
         white-space: normal !important; text-align: center;
     }
     .header-logo { margin: 0 auto !important; }
     #companyLogo { height: 60px !important; }
     .header-actions { width: 100%; justify-content: center; }
+    .btn-comparison { font-size: 12px; padding: 8px 14px; }
 
     .filters-bar {
         display: flex !important;
         flex-direction: column !important;
         grid-template-columns: none !important;
-        gap: 15px !important;
+        gap: 12px !important;
         padding: 15px !important;
     }
-    .btn-reset { width: 100% !important; margin-top: 10px !important; order: 99; }
-    #branchLeaderboard { min-width: 450px !important; }
-    #branchLeaderboard td:last-child { min-width: 70px !important; white-space: nowrap !important; font-weight: bold; }
-    #complainsRawTable { min-width: 550px !important; }
+    .btn-reset { width: 100% !important; margin-top: 5px !important; order: 99; }
+
     .funnels-section { flex-direction: column; }
+    .funnels-section .card { margin-bottom: 15px; }
+
     .card { padding: 15px !important; margin-bottom: 15px !important; }
     .card h3 { font-size: 15px !important; margin-bottom: 15px !important; }
+
+    #branchLeaderboard { min-width: 400px; }
+    #complainsRawTable { min-width: 550px; }
+
     .period-pickers { grid-template-columns: 1fr; }
     .compensation-card { flex-direction: column; text-align: center; }
+
+    #loginLogo { height: 70px !important; }
+    .login-box { padding: 35px 25px; }
 }
