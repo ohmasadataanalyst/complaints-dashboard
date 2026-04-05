@@ -62,7 +62,7 @@
         </div>
     </div>
 
-    <!-- ===== MAIN APP — always in DOM so ECharts measures real width ===== -->
+    <!-- ===== MAIN APP ===== -->
     <div id="mainApp">
         <header class="main-header">
             <h2 style="color: #d32f2f; margin: 0;">داشبورد تحليل شكاوي العملاء</h2>
@@ -78,7 +78,6 @@
 
         <div class="dashboard-container">
 
-            <!-- Filters -->
             <section class="filters-bar">
                 <div class="slicer">
                     <label>نطاق التاريخ</label>
@@ -91,19 +90,16 @@
                 <button class="btn-reset" onclick="resetFilters()">RESET</button>
             </section>
 
-            <!-- Line Chart -->
             <div class="card">
                 <h3>تطور الشكاوى (الخط الزمني)</h3>
                 <div id="lineChart" style="width:100%; height:400px;"></div>
             </div>
 
-            <!-- Donut Chart -->
             <div class="card">
                 <h3>إجمالي الحالات حسب الإجراء</h3>
                 <div id="statusDonutChartV2" style="width:100%; height:450px;"></div>
             </div>
 
-            <!-- Funnels -->
             <div class="funnels-section">
                 <div class="card">
                     <h3>الجودة</h3>
@@ -119,7 +115,6 @@
                 </div>
             </div>
 
-            <!-- Compensation Card -->
             <div class="compensation-card" id="compensationCard">
                 <div class="comp-icon">💰</div>
                 <div class="comp-info">
@@ -130,7 +125,6 @@
                 <div class="comp-badge" id="compBadge">كل الفترات</div>
             </div>
 
-            <!-- Top 15 Branches -->
             <div class="card" style="margin-top:25px;">
                 <h3>أعلى الفروع شكاوي (Top 15)</h3>
                 <div class="table-container">
@@ -147,7 +141,6 @@
                 </div>
             </div>
 
-            <!-- Raw Data Table -->
             <div class="card" style="margin-top:25px;">
                 <h3>تفاصيل الشكاوى المسجلة ( شكاوى العملاء )</h3>
                 <div class="raw-table-container">
@@ -176,17 +169,14 @@
             var errorEl = document.getElementById('loginError');
             if (user === 'admin' && pass === 'aofadmin2026') {
                 document.getElementById('loginOverlay').classList.add('hidden');
-                // Re-render all charts now that mainApp is fully visible
+                document.getElementById('mainApp').classList.add('visible');
+                // After mainApp becomes display:block, re-render all charts
+                // so they measure the correct container width
                 setTimeout(function() {
-                    if (typeof myCharts !== 'undefined') {
-                        Object.values(myCharts).forEach(function(c) { c.resize(); });
+                    if (typeof originalData !== 'undefined' && originalData.length > 0) {
+                        updateDashboard(originalData);
                     }
-                }, 50);
-                setTimeout(function() {
-                    if (typeof myCharts !== 'undefined') {
-                        Object.values(myCharts).forEach(function(c) { c.resize(); });
-                    }
-                }, 300);
+                }, 100);
             } else {
                 errorEl.textContent = 'اسم المستخدم أو كلمة المرور غير صحيحة';
                 document.getElementById('loginPassword').value = '';

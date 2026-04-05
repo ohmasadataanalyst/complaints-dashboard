@@ -405,8 +405,8 @@ tr:hover td { background: #242424; }
 .login-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(211,47,47,0.4); }
 .login-error { color: #ef9a9a; font-size: 13px; margin-top: 10px; min-height: 20px; }
 
-#mainApp { display: block; visibility: hidden; }
-#mainApp.visible { visibility: visible; }
+#mainApp { display: none; }
+#mainApp.visible { display: block; }
 
 /* ==========================================================
    8. Period Comparison Modal
