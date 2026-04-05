@@ -62,7 +62,7 @@
         </div>
     </div>
 
-    <!-- ===== MAIN APP ===== -->
+    <!-- ===== MAIN APP — always in DOM so ECharts measures real width ===== -->
     <div id="mainApp">
         <header class="main-header">
             <h2 style="color: #d32f2f; margin: 0;">داشبورد تحليل شكاوي العملاء</h2>
@@ -171,22 +171,34 @@
 
     <script>
         function handleDashboardLogin() {
-            const user = document.getElementById('loginUsername').value.trim();
-            const pass = document.getElementById('loginPassword').value;
-            const errorEl = document.getElementById('loginError');
+            var user = document.getElementById('loginUsername').value.trim();
+            var pass = document.getElementById('loginPassword').value;
+            var errorEl = document.getElementById('loginError');
             if (user === 'admin' && pass === 'aofadmin2026') {
                 document.getElementById('loginOverlay').classList.add('hidden');
-                document.getElementById('mainApp').classList.add('visible');
+                // Re-render all charts now that mainApp is fully visible
+                setTimeout(function() {
+                    if (typeof myCharts !== 'undefined') {
+                        Object.values(myCharts).forEach(function(c) { c.resize(); });
+                    }
+                }, 50);
+                setTimeout(function() {
+                    if (typeof myCharts !== 'undefined') {
+                        Object.values(myCharts).forEach(function(c) { c.resize(); });
+                    }
+                }, 300);
             } else {
                 errorEl.textContent = 'اسم المستخدم أو كلمة المرور غير صحيحة';
                 document.getElementById('loginPassword').value = '';
             }
         }
+
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Enter' && !document.getElementById('loginOverlay').classList.contains('hidden')) {
                 handleDashboardLogin();
             }
         });
+
         function openComparisonModal() {
             document.getElementById('comparisonModal').classList.add('open');
             setTimeout(initComparisonDatePickers, 50);
