@@ -102,6 +102,7 @@ RAW_BRANCH_MAPPING_DATA = """
 2257790 SHWMAK B37
 2260889 UHDMM B38
 2263062 HSRUH B39
+2268360 QB05
 """
 
 def create_branch_map_prioritized(raw_data):
