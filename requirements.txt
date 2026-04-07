@@ -5,3 +5,6 @@ gspread-dataframe
 google-auth
 pytz
 numpy
+re
+gc
+concurrent.futures

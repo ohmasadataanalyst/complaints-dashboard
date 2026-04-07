@@ -2,26 +2,27 @@ import os
 import json
 import requests
 import sys
-import datetime
-import pytz
 import pandas as pd
-import numpy as np
 import gspread
 import re
-from datetime import datetime, timedelta
+import gc  
+from gspread_dataframe import set_with_dataframe, get_as_dataframe
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from google.oauth2.service_account import Credentials
-from gspread_dataframe import set_with_dataframe
 
-# --- 1. GitHub Secrets ---
+# --- 1. GITHUB SECRETS ---
 API_KEY = os.getenv('ZENPUT_API_KEY')
 GOOGLE_JSON_CREDENTIALS = os.getenv('GOOGLE_CREDENTIALS')
 
+if not API_KEY:
+    sys.exit("❌ Error: ZENPUT_API_KEY secret not found!")
+
 # --- CONFIGURATION ---
 TEMPLATE_ID = 512247
-TZ = pytz.timezone("Asia/Baghdad")
 GOOGLE_SHEET_ID = "1avAzf7ROjVAy43_yDTfppUAhg6JdM191_wGeLOfICWA"
+MAX_THREADS = 5  
 
-# --- AUTHENTICATION SETUP ---
+# --- AUTHENTICATION SETUP FOR GITHUB ACTIONS ---
 def get_gspread_client():
     if not GOOGLE_JSON_CREDENTIALS:
         sys.exit("❌ Error: GOOGLE_CREDENTIALS secret not found!")
@@ -38,7 +39,7 @@ def get_gspread_client():
     except Exception as e:
         sys.exit(f"❌ Authentication failed: {e}")
 
-gc = get_gspread_client()
+gsheet_client = get_gspread_client()
 print("✅ Authentication successful via GitHub Secrets!")
 
 # --- MAPPING CONFIGURATION ---
@@ -133,103 +134,114 @@ BRANCH_MAP = create_branch_map_prioritized(RAW_BRANCH_MAPPING_DATA)
 def zenput_headers():
     return {"X-API-TOKEN": API_KEY, "Content-Type": "application/json"}
 
-def fetch_submissions(template_id):
-    print("🔍 Attempting to fetch 2025 & 2026 (Jan-Apr) submissions...")
-    subs = []
+def fetch_and_parse_chunk(template_id, chunk_start, chunk_end):
+    print(f"⏳ Requesting data for {chunk_start[:10]} to {chunk_end[:10]}...")
+    parsed_rows = []
     start = 0
     limit = 50
-    max_records = 9000
-    fetch_start_date = "2025-01-01"
-    print(f"📅 Fetching all submissions from {fetch_start_date} onwards...")
-
-    while len(subs) < max_records:
+    while True:
         try:
             params = {
                 "form_template_id": template_id,
                 "limit": limit,
                 "start": start,
-                "date_submitted_start": fetch_start_date
+                "date_submitted_start": chunk_start,
+                "date_submitted_end": chunk_end
             }
-            print(f"📦 Requesting batch {start // limit + 1}...")
             resp = requests.get(
                 "https://www.zenput.com/api/v3/submissions/",
                 headers=zenput_headers(),
-                params=params
+                params=params,
+                timeout=30
             )
 
-            if resp.status_code == 400 and "LIMIT" in str(resp.text):
-                print("⚠️ Hit API limit, trying smaller batch size...")
-                limit = max(10, limit // 2)
-                continue
-
             if resp.status_code != 200:
-                print(f"❌ Error fetching submissions: HTTP {resp.status_code} - {resp.text}")
                 break
 
             batch = resp.json().get("data", [])
             if not batch:
-                print("📝 No more submissions to fetch")
-                break
+                break 
 
-            print(f"📊 Processing batch of {len(batch)} submissions...")
-            batch_filtered = []
             for s in batch:
-                submitted_date = s["smetadata"]["date_submitted_local"]
-                is_2025 = submitted_date.startswith("2025-")
-                is_2026_apr = submitted_date.startswith("2026-") and submitted_date <= "2026-04-30"
-                if is_2025 or is_2026_apr:
-                    batch_filtered.append(s)
+                try:
+                    sub_id = str(s.get("id"))
+                    sm = s.get("smetadata", {})
+                    answers_dict = {ans["title"]: ans.get("value") for ans in s.get("answers", [])}
+                    raw_branch_code = str(answers_dict.get("اختر الفرع", "")).strip()
 
-            subs.extend(batch_filtered)
-            print(f"✅ Found {len(batch_filtered)} submissions in the target period (total: {len(subs)})")
+                    row = {
+                        "Submission_ID": sub_id,
+                        "اختر الفرع": BRANCH_MAP.get(raw_branch_code, raw_branch_code),
+                        "محتوى شكوى العميل": answers_dict.get("محتوى شكوى العميل", ""),
+                        "نوع الشكوى": answers_dict.get("نوع الشكوى"),
+                        "فى حاله كانت الشكوى جوده برجاء تحديد نوع الشكوى": answers_dict.get("فى حاله كانت الشكوى جوده برجاء تحديد نوع الشكوى"),
+                        "الشكوى على اي منتج؟": answers_dict.get("الشكوى على اي منتج؟"),
+                        "التاريخ": sm.get("date_submitted_local", ""),
+                        "مدير المنطقة المسؤول": answers_dict.get("مدير المنطقة المسؤول", ""),
+                        "مدى الاجراء المتخذ": answers_dict.get("مدى الاجراء المتخذ", ""),
+                        "مصدر الشكوى": answers_dict.get("مصدر الشكوى", ""),
+                        "تم الطلب من خلال": answers_dict.get("تم الطلب من خلال", ""),
+                        "قيمة التعويض": answers_dict.get("قيمة التعويض", ""), 
+                    }
+                    parsed_rows.append(row)
+                except Exception:
+                    continue
+            
+            del batch
+            
             start += limit
-
-            if start > max_records:
-                print(f"⚠️ Reached safety limit at {start} records")
+            if start >= 9900:
                 break
 
         except Exception as e:
-            print(f"❌ Unexpected error: {e}")
+            print(f"⚠️ Network timeout on {chunk_start[:10]}")
             break
+            
+    return parsed_rows
 
-    print(f"🎯 Final result: {len(subs)} submissions from the target period")
-    return subs
+def fetch_submissions_optimized(template_id, start_date):
+    print(f"⚡ Fetching submissions from {start_date} using MEMORY-SAFE MULTITHREADING...")
+    
+    start_dt = pd.to_datetime(start_date)
+    now_dt = pd.Timestamp.now()
+    
+    chunks = []
+    curr_dt = start_dt
+    while curr_dt < now_dt:
+        next_dt = curr_dt + pd.Timedelta(days=15)
+        if next_dt > now_dt:
+            next_dt = now_dt
+        chunks.append((
+            curr_dt.strftime('%Y-%m-%d %H:%M:%S'),
+            next_dt.strftime('%Y-%m-%d %H:%M:%S')
+        ))
+        curr_dt = next_dt
 
-def submissions_to_filtered_df(subs):
-    if not subs:
-        print("⚠️ No submissions to process")
+    all_parsed_rows = []
+    
+    with ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
+        future_to_chunk = {executor.submit(fetch_and_parse_chunk, template_id, c[0], c[1]): c for c in chunks}
+        for future in as_completed(future_to_chunk):
+            chunk = future_to_chunk[future]
+            try:
+                data = future.result()
+                all_parsed_rows.extend(data)
+                print(f"✅ Extracted {len(data)} records for: {chunk[0][:10]} to {chunk[1][:10]}")
+                del data 
+                gc.collect() 
+            except Exception as e:
+                print(f"❌ Chunk {chunk[0][:10]} failed: {e}")
+
+    print(f"🎯 Total valid submissions fetched: {len(all_parsed_rows)}")
+    return all_parsed_rows
+
+def process_dataframe(rows_list):
+    if not rows_list:
         return pd.DataFrame()
 
-    rows = []
-    for original_id, s in enumerate(subs, 1):
-        try:
-            sm = s["smetadata"]
-            answers = {ans["title"]: ans.get("value") for ans in s.get("answers", [])}
-            raw_branch_code = str(answers.get("اختر الفرع", "")).strip()
-            row = {
-                "original_id": original_id,
-                "اختر الفرع": BRANCH_MAP.get(raw_branch_code, raw_branch_code),
-                "محتوى شكوى العميل": answers.get("محتوى شكوى العميل", ""),
-                "نوع الشكوى": answers.get("نوع الشكوى"),
-                "فى حاله كانت الشكوى جوده برجاء تحديد نوع الشكوى": answers.get("فى حاله كانت الشكوى جوده برجاء تحديد نوع الشكوى"),
-                "الشكوى على اي منتج؟": answers.get("الشكوى على اي منتج؟"),
-                "التاريخ": sm["date_submitted_local"],
-                "مدير المنطقة المسؤول": answers.get("مدير المنطقة المسؤول", ""),
-                "مدى الاجراء المتخذ": answers.get("مدى الاجراء المتخذ", ""),
-                "مصدر الشكوى": answers.get("مصدر الشكوى", ""),
-                "تم الطلب من خلال": answers.get("تم الطلب من خلال", ""),
-                "قيمة التعويض": answers.get("قيمة التعويض", ""),  # ✅ NEW FIELD
-            }
-            rows.append(row)
-        except Exception as e:
-            print(f"⚠️ Error processing submission {original_id}: {e}")
-            continue
-
-    if not rows:
-        print("⚠️ No valid rows after processing")
-        return pd.DataFrame()
-
-    df = pd.DataFrame(rows)
+    df = pd.DataFrame(rows_list)
+    
+    df = df.drop_duplicates(subset=['Submission_ID'])
 
     def clean_value(value):
         if isinstance(value, list):
@@ -239,14 +251,12 @@ def submissions_to_filtered_df(subs):
         return str(value).strip()
 
     for col in df.columns:
-        if col != 'original_id':
-            df[col] = df[col].apply(clean_value)
+        df[col] = df[col].apply(clean_value)
 
     df['التاريخ'] = pd.to_datetime(df['التاريخ'], errors='coerce').dt.strftime('%Y-%m-%d')
+    
     df['مدى الاجراء المتخذ'] = df['مدى الاجراء المتخذ'].apply(lambda x: x.split(',')[0].strip())
-    df['مدى الاجراء المتخذ'].replace('', 'لم يتم المراجعة', inplace=True)
-
-    # ✅ Convert compensation to numeric
+    df['مدى الاجراء المتخذ'] = df['مدى الاجراء المتخذ'].replace('', 'لم يتم المراجعة')
     df['قيمة التعويض'] = pd.to_numeric(df['قيمة التعويض'], errors='coerce').fillna(0)
 
     cols_to_explode = [
@@ -260,47 +270,88 @@ def submissions_to_filtered_df(subs):
 
     quality_col = 'فى حاله كانت الشكوى جوده برجاء تحديد نوع الشكوى'
     df[quality_col] = df[quality_col].fillna('لا علاقة لها بالجودة')
-    df[quality_col].replace('', 'لا علاقة لها بالجودة', inplace=True)
+    df[quality_col] = df[quality_col].replace('', 'لا علاقة لها بالجودة')
 
-    df.rename(columns={'original_id': 'INDEX'}, inplace=True)
-    df = df[['INDEX'] + [c for c in df.columns if c != 'INDEX']]
-    print(f"📊 DataFrame created with {len(df)} rows")
+    df['Submission_ID'] = df['Submission_ID'].astype(str).str.replace(r'\.0$', '', regex=True).str.strip()
+
+    gc.collect()
     return df.reset_index(drop=True)
 
-def write_to_google_sheet(df, gc_client):
-    print(f"ℹ️ Opening Google Sheet by ID: {GOOGLE_SHEET_ID}")
-    try:
-        spreadsheet = gc_client.open_by_key(GOOGLE_SHEET_ID)
-        worksheet = spreadsheet.get_worksheet(0)
-    except gspread.exceptions.SpreadsheetNotFound:
-        print("❌ ERROR: Spreadsheet not found.")
-        return
-    except Exception as e:
-        print(f"❌ An error occurred when opening the Google Sheet: {e}")
-        return
+def update_google_sheet(new_df, existing_df, worksheet):
+    print("ℹ️ Resolving edits and merging data...")
+    
+    if not existing_df.empty and 'Submission_ID' in existing_df.columns:
+        existing_df['Submission_ID'] = existing_df['Submission_ID'].astype(str).str.replace(r'\.0$', '', regex=True).str.strip()
+        
+        columns_to_check = [col for col in existing_df.columns if col != 'INDEX']
+        existing_df = existing_df.drop_duplicates(subset=columns_to_check)
 
-    print("ℹ️ Clearing old data and writing new data with headers...")
+        fetched_ids = set(new_df['Submission_ID'])
+        existing_df = existing_df[~existing_df['Submission_ID'].isin(fetched_ids)]
+        
+        final_df = pd.concat([existing_df, new_df], ignore_index=True)
+        del existing_df
+        del new_df
+        gc.collect()
+    else:
+        final_df = new_df
+
+    final_df['TempDate'] = pd.to_datetime(final_df['التاريخ'], errors='coerce')
+    final_df = final_df.sort_values(by=['TempDate', 'Submission_ID'])
+    final_df.drop(columns=['TempDate'], inplace=True)
+
+    if 'INDEX' in final_df.columns:
+        final_df.drop(columns=['INDEX'], inplace=True)
+    
+    # Cumulative sum logic keeps INDEX exactly the same for rows sharing a Submission_ID
+    submission_indices = (~final_df['Submission_ID'].duplicated()).cumsum()
+    final_df.insert(0, 'INDEX', submission_indices)
+    
+    df_for_gsheet = final_df.fillna('')
+    del final_df
+    gc.collect()
+
+    print("ℹ️ Writing updated dataset to Google Sheets...")
     worksheet.clear()
-    df_for_gsheet = df.fillna('')
-    print(f"ℹ️ Writing {len(df_for_gsheet)} rows to the sheet...")
-    # ✅ Write headers from row 1
     set_with_dataframe(worksheet, df_for_gsheet, row=1, col=1, include_index=False, include_column_header=True)
-    print(f"✅ Successfully wrote {len(df_for_gsheet)} rows to Google Sheet.")
+    print(f"✅ Successfully wrote {len(df_for_gsheet)} total rows to Google Sheet.")
 
 # --- Main Flow ---
 if __name__ == "__main__":
-    print("🚀 Starting Sync...")
+    print("🚀 Starting High-Speed, Low-Memory Sync (GitHub Actions Mode)...")
     try:
-        submissions = fetch_submissions(TEMPLATE_ID)
-        if not submissions:
-            print("ℹ️ No submissions found for the target period. Nothing to process.")
+        print("ℹ️ Opening Google Sheet to check existing data...")
+        spreadsheet = gsheet_client.open_by_key(GOOGLE_SHEET_ID)
+        worksheet = spreadsheet.get_worksheet(0)
+        
+        existing_df = get_as_dataframe(worksheet).dropna(how='all')
+        gc.collect()
+        
+        if not existing_df.empty and 'التاريخ' in existing_df.columns and 'Submission_ID' in existing_df.columns:
+            max_date_str = pd.to_datetime(existing_df['التاريخ'], errors='coerce').max().strftime('%Y-%m-%d')
+            max_date = pd.to_datetime(max_date_str)
+            thirty_days_ago = pd.Timestamp.now() - pd.Timedelta(days=30)
+            
+            start_date_obj = min(thirty_days_ago, max_date)
+            start_date_for_api = start_date_obj.strftime('%Y-%m-%d')
+            
+            print(f"📅 Data found! Looking back to {start_date_for_api} to sync new records AND edits.")
         else:
-            print(f"📊 Found {len(submissions)} submissions. Processing data...")
-            df_final = submissions_to_filtered_df(submissions)
-            if df_final.empty:
-                print("ℹ️ DataFrame is empty after processing. No data will be written.")
-            else:
-                write_to_google_sheet(df_final, gc)
+            print("⚠️ Sheet is empty or missing structure. Fetching everything from 2025-01-01.")
+            existing_df = pd.DataFrame() 
+            start_date_for_api = "2025-01-01"
+
+        raw_rows = fetch_submissions_optimized(TEMPLATE_ID, start_date_for_api)
+        
+        new_df = process_dataframe(raw_rows)
+        del raw_rows
+        gc.collect()
+        
+        if new_df.empty:
+            print("ℹ️ No records found to process.")
+        else:
+            update_google_sheet(new_df, existing_df, worksheet)
+
         print("🏁 Finished.")
     except Exception as e:
         print(f"❌ Critical Failure: {e}")
