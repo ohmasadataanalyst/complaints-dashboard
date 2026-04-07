@@ -5,5 +5,4 @@ gspread-dataframe
 google-auth
 pytz
 numpy
-gc
-concurrent.futures
+
