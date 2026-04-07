@@ -3,10 +3,10 @@
 // =============================================
 const API_KEY = 'AIzaSyANZIOWxCtxAcLVrFebSRF9xk93DvrUiCs';
 const SPREADSHEET_ID = '1avAzf7ROjVAy43_yDTfppUAhg6JdM191_wGeLOfICWA';
-const SHEET_NAME = 'Sheet1'; 
-const RANGE = SHEET_NAME + '!A:Z'; 
+const SHEET_NAME = 'Sheet1';
+const RANGE = SHEET_NAME + '!A:Z';
 
-let originalData = []; 
+let originalData = [];
 let myCharts = {};
 
 const multiSelectState = {
@@ -14,6 +14,14 @@ const multiSelectState = {
     typeSlicer: new Set(),
     productSlicer: new Set(),
     managerSlicer: new Set()
+};
+
+// Comparison modal filter state (separate from main filters)
+const compFilterState = {
+    branch: new Set(),
+    type: new Set(),
+    product: new Set(),
+    manager: new Set()
 };
 
 const slicerConfigs = [
@@ -249,7 +257,6 @@ function renderCompensation(data) {
         valEl.textContent = total.toLocaleString('ar-EG') + ' ر.س';
         valEl.style.color = '#d32f2f';
         subEl.textContent = 'بناءً على ' + count.toLocaleString() + ' حالة لديها قيمة تعويض مسجلة';
-        // Check if filters applied
         var anyFilter = slicerConfigs.some(function(c) { return multiSelectState[c.id].size > 0; });
         var dpEl = document.getElementById('datePicker');
         var dp = dpEl && dpEl._flatpickr;
@@ -419,12 +426,129 @@ function renderRawDataTable(data) {
 }
 
 // =============================================
-// PERIOD COMPARISON
+// PERIOD COMPARISON — FILTERS
 // =============================================
 var compDatePickers = {};
+var compFilterSlicers = [
+    { key: 'branch',   column: 'اختر الفرع',            label: 'جميع الفروع', labelText: 'الفرع',        filterBranch: true },
+    { key: 'type',     column: 'نوع الشكوى',            label: 'الكل',        labelText: 'نوع الشكوى' },
+    { key: 'product',  column: 'الشكوى على اي منتج؟',  label: 'الكل',        labelText: 'المنتج' },
+    { key: 'manager',  column: 'مدير المنطقة المسؤول', label: 'الكل',        labelText: 'مدير المنطقة' }
+];
 
+function buildCompMsHTML(key, label) {
+    var id = 'comp-ms-' + key;
+    return '<div class="multi-select-wrapper" id="wrapper-' + id + '">' +
+        '<div class="ms-trigger" onclick="toggleMsDropdown(\'' + id + '\')">' +
+            '<span class="ms-label" id="label-' + id + '">' + label + '</span>' +
+            '<span class="ms-arrow">▾</span>' +
+        '</div>' +
+        '<div class="ms-dropdown" id="dropdown-' + id + '">' +
+            '<div class="ms-search-wrap"><input class="ms-search" type="text" placeholder="بحث..." oninput="filterMsDropdown(\'' + id + '\', this.value)"></div>' +
+            '<div class="ms-options" id="options-' + id + '"></div>' +
+            '<div class="ms-footer">' +
+                '<button onclick="compSelectAll(\'' + key + '\')">تحديد الكل</button>' +
+                '<button onclick="compClearAll(\'' + key + '\')">إلغاء الكل</button>' +
+            '</div>' +
+        '</div>' +
+    '</div>';
+}
+
+function compSelectAll(key) {
+    var id = 'comp-ms-' + key;
+    document.querySelectorAll('#options-' + id + ' .ms-option').forEach(function(opt) {
+        if (opt.style.display !== 'none') { compFilterState[key].add(opt.dataset.value); opt.classList.add('selected'); }
+    });
+    updateCompMsLabel(key);
+}
+
+function compClearAll(key) {
+    var id = 'comp-ms-' + key;
+    compFilterState[key].clear();
+    document.querySelectorAll('#options-' + id + ' .ms-option').forEach(function(o) { o.classList.remove('selected'); });
+    updateCompMsLabel(key);
+}
+
+function toggleCompMsOption(key, value, el) {
+    if (compFilterState[key].has(value)) { compFilterState[key].delete(value); el.classList.remove('selected'); }
+    else { compFilterState[key].add(value); el.classList.add('selected'); }
+    updateCompMsLabel(key);
+}
+
+function updateCompMsLabel(key) {
+    var id = 'comp-ms-' + key;
+    var el = document.getElementById('label-' + id);
+    if (!el) return;
+    var count = compFilterState[key].size;
+    var conf = compFilterSlicers.find(function(c){ return c.key === key; });
+    el.textContent = count === 0 ? (conf ? conf.label : 'الكل') : ('تم اختيار ' + count + ' عنصر');
+    el.style.color = count > 0 ? '#42a5f5' : '';
+}
+
+function buildCompFiltersHTML() {
+    var html = '<div class="comp-filters-bar">';
+    compFilterSlicers.forEach(function(conf) {
+        var id = 'comp-ms-' + conf.key;
+        var unique = [...new Set(originalData.map(function(item){ return item[conf.column]; }))].filter(function(val){
+            if (!val) return false;
+            if (conf.filterBranch) return isNaN(val);
+            return true;
+        }).sort();
+        html += '<div class="comp-filter-slicer">';
+        html += '<label>' + conf.labelText + '</label>';
+        html += buildCompMsHTML(conf.key, conf.label);
+        html += '</div>';
+        // store unique values for later population
+        conf._unique = unique;
+    });
+    html += '<button class="comp-reset-btn" onclick="resetCompFilters()">RESET</button>';
+    html += '</div>';
+    return html;
+}
+
+function populateCompFilterOptions() {
+    compFilterSlicers.forEach(function(conf) {
+        var id = 'comp-ms-' + conf.key;
+        var c = document.getElementById('options-' + id);
+        if (!c || !conf._unique) return;
+        c.innerHTML = '';
+        conf._unique.forEach(function(val) {
+            var div = document.createElement('div');
+            div.className = 'ms-option';
+            div.dataset.value = val;
+            div.textContent = val;
+            var key = conf.key;
+            div.onclick = function() { toggleCompMsOption(key, val, div); };
+            c.appendChild(div);
+        });
+    });
+}
+
+function resetCompFilters() {
+    compFilterSlicers.forEach(function(conf) {
+        compFilterState[conf.key].clear();
+        var id = 'comp-ms-' + conf.key;
+        document.querySelectorAll('#options-' + id + ' .ms-option').forEach(function(o){ o.classList.remove('selected'); });
+        updateCompMsLabel(conf.key);
+    });
+}
+
+function applyCompFilters(data) {
+    var filtered = data;
+    compFilterSlicers.forEach(function(conf) {
+        var sel = compFilterState[conf.key];
+        if (sel.size > 0) {
+            filtered = filtered.filter(function(item){ return sel.has(item[conf.column]); });
+        }
+    });
+    return filtered;
+}
+
+// =============================================
+// PERIOD COMPARISON — MAIN
+// =============================================
 function initComparisonDatePickers() {
-    if (compDatePickers['aStart']) return; // already initialised
+    if (compDatePickers['aStart']) return;
     ['periodAStart','periodAEnd','periodBStart','periodBEnd'].forEach(function(id) {
         compDatePickers[id] = flatpickr('#'+id, { dateFormat:'Y-m-d', allowInput:false });
     });
@@ -432,7 +556,15 @@ function initComparisonDatePickers() {
 
 function openComparisonModal() {
     document.getElementById('comparisonModal').classList.add('open');
-    setTimeout(initComparisonDatePickers, 50);
+    setTimeout(function() {
+        initComparisonDatePickers();
+        // Inject filter bar if not already there
+        var filterContainer = document.getElementById('compFilterContainer');
+        if (filterContainer && filterContainer.innerHTML.trim() === '') {
+            filterContainer.innerHTML = buildCompFiltersHTML();
+            populateCompFilterOptions();
+        }
+    }, 50);
 }
 
 function runComparison() {
@@ -446,89 +578,146 @@ function runComparison() {
         return;
     }
 
-    var dataA = filterByDateRange(originalData, aStart, aEnd);
-    var dataB = filterByDateRange(originalData, bStart, bEnd);
+    // Apply comparison filters on top of date ranges
+    var dataA = applyCompFilters(filterByDateRange(originalData, aStart, aEnd));
+    var dataB = applyCompFilters(filterByDateRange(originalData, bStart, bEnd));
 
     var resultsEl = document.getElementById('comparisonResults');
     resultsEl.innerHTML = buildComparisonHTML(dataA, dataB, aStart, aEnd, bStart, bEnd);
     resultsEl.classList.add('visible');
+
+    // Render the dual line chart
+    setTimeout(function() {
+        renderCompLineChart(dataA, dataB, aStart, aEnd, bStart, bEnd);
+    }, 100);
 }
 
-function filterByDateRange(data, startStr, endStr) {
-    var start = new Date(startStr); start.setHours(0,0,0,0);
-    var end   = new Date(endStr);   end.setHours(23,59,59,999);
-    return data.filter(function(item) {
-        var d = parseExcelDate(item['التاريخ']);
-        if (!d) return false;
-        var c = new Date(d); c.setHours(0,0,0,0);
-        return c >= start && c <= end;
-    });
+// =============================================
+// PERIOD COMPARISON — DUAL LINE CHART
+// =============================================
+function renderCompLineChart(dataA, dataB, aStart, aEnd, bStart, bEnd) {
+    var chartDom = document.getElementById('compLineChart');
+    if (!chartDom) return;
+    var mc = echarts.getInstanceByDom(chartDom); if (mc) mc.dispose();
+    var myChart = echarts.init(chartDom);
+
+    function buildTimeSeries(data) {
+        var timeData = {}; var seen = new Set();
+        data.forEach(function(r) {
+            var d = parseExcelDate(r['التاريخ']);
+            if (d) {
+                var ds = d.toLocaleDateString('en-CA');
+                var uk = ds + '_' + r['INDEX'];
+                if (!seen.has(uk)) { timeData[ds] = (timeData[ds]||0)+1; seen.add(uk); }
+            }
+        });
+        return timeData;
+    }
+
+    var tdA = buildTimeSeries(dataA);
+    var tdB = buildTimeSeries(dataB);
+
+    // Normalize dates so both series align on day-offset (day 1, day 2, etc.)
+    var datesA = Object.keys(tdA).sort();
+    var datesB = Object.keys(tdB).sort();
+    var maxLen = Math.max(datesA.length, datesB.length);
+    var xAxis = [];
+    for (var i = 1; i <= maxLen; i++) xAxis.push('يوم ' + i);
+
+    var valuesA = datesA.map(function(d){ return tdA[d]; });
+    var valuesB = datesB.map(function(d){ return tdB[d]; });
+
+    var mn = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+    myChart.setOption({
+        tooltip: {
+            trigger: 'axis',
+            backgroundColor: 'rgba(20,20,20,0.95)',
+            textStyle: { color: '#eee' },
+            confine: true,
+            formatter: function(params) {
+                var s = '<b>' + params[0].axisValue + '</b><br>';
+                params.forEach(function(p) {
+                    s += p.marker + ' ' + p.seriesName + ': <b>' + (p.value||0) + '</b><br>';
+                });
+                return s;
+            }
+        },
+        legend: {
+            data: [
+                { name: '🔵 الفترة الأولى (' + aStart + ' → ' + aEnd + ')', textStyle: { color: '#42a5f5' } },
+                { name: '🔴 الفترة الثانية (' + bStart + ' → ' + bEnd + ')', textStyle: { color: '#ef5350' } }
+            ],
+            top: 0,
+            textStyle: { color: '#ccc', fontSize: 11 }
+        },
+        grid: { left: '3%', right: '4%', bottom: '10%', top: '15%', containLabel: true },
+        dataZoom: [{ type: 'inside', start: 0, end: 100 }],
+        xAxis: {
+            type: 'category',
+            data: xAxis,
+            axisTick: { show: false },
+            axisLabel: { color: '#aaa', fontSize: 10 }
+        },
+        yAxis: {
+            type: 'value',
+            splitLine: { lineStyle: { color: '#222' } },
+            axisLabel: { color: '#888', fontSize: 10 }
+        },
+        series: [
+            {
+                name: '🔵 الفترة الأولى (' + aStart + ' → ' + aEnd + ')',
+                type: 'line', smooth: true, showSymbol: false,
+                lineStyle: { width: 2, color: '#42a5f5' },
+                areaStyle: { opacity: 0.1, color: new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'#42a5f5'},{offset:1,color:'transparent'}]) },
+                data: valuesA
+            },
+            {
+                name: '🔴 الفترة الثانية (' + bStart + ' → ' + bEnd + ')',
+                type: 'line', smooth: true, showSymbol: false,
+                lineStyle: { width: 2, color: '#ef5350' },
+                areaStyle: { opacity: 0.1, color: new echarts.graphic.LinearGradient(0,0,0,1,[{offset:0,color:'#ef5350'},{offset:1,color:'transparent'}]) },
+                data: valuesB
+            }
+        ]
+    }, true);
+    myCharts['compLine'] = myChart;
 }
 
-function getUniqueComplaints(data) {
-    var seen = new Set();
-    return data.filter(function(r) {
-        if (!r['INDEX'] || seen.has(r['INDEX'])) return false;
-        seen.add(r['INDEX']); return true;
-    });
-}
-
-function countBy(data, col) {
-    var counts = {};
-    data.forEach(function(r) {
-        var v = r[col]||'غير محدد';
-        counts[v]=(counts[v]||0)+1;
-    });
-    return counts;
-}
-
-function topN(counts, n) {
-    return Object.entries(counts).sort(function(a,b){return b[1]-a[1];}).slice(0,n);
-}
-
+// =============================================
+// PERIOD COMPARISON — BUILD HTML
+// =============================================
 function buildComparisonHTML(dataA, dataB, aStart, aEnd, bStart, bEnd) {
     var uA = getUniqueComplaints(dataA);
     var uB = getUniqueComplaints(dataB);
 
     var totalA = uA.length; var totalB = uB.length;
-    var diff = totalB - totalA;
-    var diffPct = totalA > 0 ? ((diff/totalA)*100).toFixed(1) : '--';
-    var changeClass = diff > 0 ? 'up' : (diff < 0 ? 'down' : 'neutral');
-    var changeSymbol = diff > 0 ? '▲' : (diff < 0 ? '▼' : '—');
-
-    // Compensation
     var compA = sumColumn(uA, 'قيمة التعويض');
     var compB = sumColumn(uB, 'قيمة التعويض');
-
-    // Daily average
     var daysA = Math.max(1, daysDiff(aStart, aEnd));
     var daysB = Math.max(1, daysDiff(bStart, bEnd));
     var avgA = (totalA/daysA).toFixed(1);
     var avgB = (totalB/daysB).toFixed(1);
 
-    // By action taken
     var actionA = countBy(uA, 'مدى الاجراء المتخذ');
     var actionB = countBy(uB, 'مدى الاجراء المتخذ');
     var allActions = [...new Set([...Object.keys(actionA), ...Object.keys(actionB)])];
 
-    // Top complaint types
     var typeA = countBy(dataA, 'نوع الشكوى');
     var typeB = countBy(dataB, 'نوع الشكوى');
     var allTypes = [...new Set([...Object.keys(typeA), ...Object.keys(typeB)])].filter(function(v){ return v && v!=='غير محدد'; });
 
-    // Top products
     var prodA = countBy(dataA, 'الشكوى على اي منتج؟');
     var prodB = countBy(dataB, 'الشكوى على اي منتج؟');
     var allProds = [...new Set([...Object.keys(prodA), ...Object.keys(prodB)])].filter(function(v){
         return v && !['لا علاقة لها بالمنتج','غير محدد','أخرى','اخرى'].includes(v);
     });
 
-    // Top branches
+    // ALL branches — no slice
     var branchA = countBy(uA, 'اختر الفرع');
     var branchB = countBy(uB, 'اختر الفرع');
     var allBranches = [...new Set([...Object.keys(branchA), ...Object.keys(branchB)])].filter(function(v){ return v && isNaN(v); });
 
-    // Top quality
     var qualA = countBy(dataA, 'فى حاله كانت الشكوى جوده برجاء تحديد نوع الشكوى');
     var qualB = countBy(dataB, 'فى حاله كانت الشكوى جوده برجاء تحديد نوع الشكوى');
     var allQual = [...new Set([...Object.keys(qualA), ...Object.keys(qualB)])].filter(function(v){
@@ -537,45 +726,49 @@ function buildComparisonHTML(dataA, dataB, aStart, aEnd, bStart, bEnd) {
 
     var html = '';
 
-    // ---- HEADER KPI cards ----
+    // KPI Cards
     html += '<div class="comp-section-title">📊 ملخص عام</div>';
     html += '<div class="comp-kpi-grid">';
-    html += kpiCard('إجمالي الشكاوى', totalA, totalB, false);
-    html += kpiCard('متوسط يومي', avgA, avgB, false);
-    html += kpiCard('إجمالي التعويضات', formatComp(compA), formatComp(compB), false, true);
+    html += kpiCard('إجمالي الشكاوى', totalA, totalB);
+    html += kpiCard('متوسط يومي', avgA, avgB);
+    html += kpiCard('إجمالي التعويضات', formatComp(compA), formatComp(compB));
     html += '</div>';
 
-    // ---- By Action ----
+    // Dual Line Chart
+    html += '<div class="comp-section-title">📈 الخط الزمني للفترتين</div>';
+    html += '<div id="compLineChart" style="width:100%;height:320px;"></div>';
+
+    // By Action
     html += '<div class="comp-section-title">✅ حسب الإجراء المتخذ</div>';
     html += '<div class="comp-table-wrap"><table class="comp-table">';
     html += '<thead><tr><th>الإجراء</th><th style="color:#42a5f5;">الفترة الأولى</th><th style="color:#ef5350;">الفترة الثانية</th><th>التغيير</th></tr></thead><tbody>';
     allActions.sort().forEach(function(action) {
-        var vA = actionA[action]||0; var vB = actionB[action]||0;
-        html += '<tr><td style="text-align:right;padding-right:16px;">'+ action +'</td><td class="period-a-color">'+vA+'</td><td class="period-b-color">'+vB+'</td><td>'+changeSpan(vA,vB)+'</td></tr>';
+        var vA=actionA[action]||0; var vB=actionB[action]||0;
+        html += '<tr><td style="text-align:right;padding-right:16px;">'+action+'</td><td class="period-a-color">'+vA+'</td><td class="period-b-color">'+vB+'</td><td>'+changeSpan(vA,vB)+'</td></tr>';
     });
     html += '</tbody></table></div>';
 
-    // ---- By Complaint Type ----
+    // By Type
     html += '<div class="comp-section-title">🏷 حسب نوع الشكوى</div>';
     html += '<div class="comp-table-wrap"><table class="comp-table">';
     html += '<thead><tr><th>النوع</th><th style="color:#42a5f5;">الفترة الأولى</th><th style="color:#ef5350;">الفترة الثانية</th><th>التغيير</th></tr></thead><tbody>';
-    allTypes.sort(function(a,b){ return (typeB[b]||0)-(typeA[b]||0)||(typeA[a]||0)-(typeB[a]||0); }).slice(0,15).forEach(function(t) {
+    allTypes.sort(function(a,b){ return (typeB[b]||0)-(typeA[b]||0)||(typeA[a]||0)-(typeB[a]||0); }).forEach(function(t) {
         var vA=typeA[t]||0; var vB=typeB[t]||0;
         html += '<tr><td style="text-align:right;padding-right:16px;">'+t+'</td><td class="period-a-color">'+vA+'</td><td class="period-b-color">'+vB+'</td><td>'+changeSpan(vA,vB)+'</td></tr>';
     });
     html += '</tbody></table></div>';
 
-    // ---- By Product ----
+    // By Product
     html += '<div class="comp-section-title">📦 حسب المنتج</div>';
     html += '<div class="comp-table-wrap"><table class="comp-table">';
     html += '<thead><tr><th>المنتج</th><th style="color:#42a5f5;">الفترة الأولى</th><th style="color:#ef5350;">الفترة الثانية</th><th>التغيير</th></tr></thead><tbody>';
-    allProds.sort().slice(0,15).forEach(function(p) {
+    allProds.sort().forEach(function(p) {
         var vA=prodA[p]||0; var vB=prodB[p]||0;
         html += '<tr><td style="text-align:right;padding-right:16px;">'+p+'</td><td class="period-a-color">'+vA+'</td><td class="period-b-color">'+vB+'</td><td>'+changeSpan(vA,vB)+'</td></tr>';
     });
     html += '</tbody></table></div>';
 
-    // ---- By Quality ----
+    // By Quality
     if (allQual.length > 0) {
         html += '<div class="comp-section-title">⭐ حسب نوع شكوى الجودة</div>';
         html += '<div class="comp-table-wrap"><table class="comp-table">';
@@ -587,20 +780,25 @@ function buildComparisonHTML(dataA, dataB, aStart, aEnd, bStart, bEnd) {
         html += '</tbody></table></div>';
     }
 
-    // ---- Top Branches ----
-    html += '<div class="comp-section-title">🏪 أعلى الفروع شكاوي</div>';
+    // ALL Branches — sorted by combined total, no limit
+    html += '<div class="comp-section-title">🏪 جميع الفروع شكاوي</div>';
     html += '<div class="comp-table-wrap"><table class="comp-table">';
-    html += '<thead><tr><th>الفرع</th><th style="color:#42a5f5;">الفترة الأولى</th><th style="color:#ef5350;">الفترة الثانية</th><th>التغيير</th></tr></thead><tbody>';
-    allBranches.sort(function(a,b){ return ((branchB[b]||0)+(branchA[b]||0))-((branchA[a]||0)+(branchB[a]||0)); }).slice(0,15).forEach(function(b) {
-        var vA=branchA[b]||0; var vB=branchB[b]||0;
-        html += '<tr><td style="text-align:right;padding-right:16px;">'+b+'</td><td class="period-a-color">'+vA+'</td><td class="period-b-color">'+vB+'</td><td>'+changeSpan(vA,vB)+'</td></tr>';
-    });
+    html += '<thead><tr><th>#</th><th>الفرع</th><th style="color:#42a5f5;">الفترة الأولى</th><th style="color:#ef5350;">الفترة الثانية</th><th>التغيير</th></tr></thead><tbody>';
+    allBranches
+        .sort(function(a,b){ return ((branchB[b]||0)+(branchA[b]||0))-((branchA[a]||0)+(branchB[a]||0)); })
+        .forEach(function(b, i) {
+            var vA=branchA[b]||0; var vB=branchB[b]||0;
+            html += '<tr><td>'+(i+1)+'</td><td style="text-align:right;padding-right:16px;">'+b+'</td><td class="period-a-color">'+vA+'</td><td class="period-b-color">'+vB+'</td><td>'+changeSpan(vA,vB)+'</td></tr>';
+        });
     html += '</tbody></table></div>';
 
     return html;
 }
 
-function kpiCard(label, vA, vB, pct, isCurrency) {
+// =============================================
+// HELPERS
+// =============================================
+function kpiCard(label, vA, vB) {
     return '<div class="comp-kpi-card">' +
         '<div class="comp-kpi-label">'+label+'</div>' +
         '<div class="comp-kpi-values">' +
@@ -637,19 +835,41 @@ function daysDiff(start, end) {
     return Math.round((new Date(end) - new Date(start)) / 86400000) + 1;
 }
 
+function filterByDateRange(data, startStr, endStr) {
+    var start = new Date(startStr); start.setHours(0,0,0,0);
+    var end   = new Date(endStr);   end.setHours(23,59,59,999);
+    return data.filter(function(item) {
+        var d = parseExcelDate(item['التاريخ']);
+        if (!d) return false;
+        var c = new Date(d); c.setHours(0,0,0,0);
+        return c >= start && c <= end;
+    });
+}
 
-// Resize charts on window resize
-window.onresize = function() {
-    Object.values(myCharts).forEach(function(c) { c.resize(); });
-};
+function getUniqueComplaints(data) {
+    var seen = new Set();
+    return data.filter(function(r) {
+        if (!r['INDEX'] || seen.has(r['INDEX'])) return false;
+        seen.add(r['INDEX']); return true;
+    });
+}
 
-// Force charts to resize after full page render (fixes first-load sizing on PC)
+function countBy(data, col) {
+    var counts = {};
+    data.forEach(function(r) {
+        var v = r[col]||'غير محدد';
+        counts[v]=(counts[v]||0)+1;
+    });
+    return counts;
+}
+
+function topN(counts, n) {
+    return Object.entries(counts).sort(function(a,b){return b[1]-a[1];}).slice(0,n);
+}
+
+window.onresize = function() { Object.values(myCharts).forEach(function(c){ c.resize(); }); };
+
 window.addEventListener('load', function() {
-    setTimeout(function() {
-        Object.values(myCharts).forEach(function(c) { c.resize(); });
-    }, 300);
-    // Second pass for slower connections
-    setTimeout(function() {
-        Object.values(myCharts).forEach(function(c) { c.resize(); });
-    }, 800);
+    setTimeout(function() { Object.values(myCharts).forEach(function(c){ c.resize(); }); }, 300);
+    setTimeout(function() { Object.values(myCharts).forEach(function(c){ c.resize(); }); }, 800);
 });
