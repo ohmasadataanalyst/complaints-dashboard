@@ -53,11 +53,11 @@
                         <input type="text" class="period-date-input" id="periodBEnd" placeholder="اختر تاريخ النهاية" readonly>
                     </div>
                 </div>
+                <div id="compFilterContainer"></div>
                 <button class="btn-compare" onclick="runComparison()">
                     <span>⚡</span>
                     <span>تشغيل المقارنة</span>
                 </button>
-                <div id="compFilterContainer"></div>
                 <div class="comparison-results" id="comparisonResults"></div>
             </div>
         </div>
@@ -88,6 +88,8 @@
                 <div class="slicer" id="slicer-type"></div>
                 <div class="slicer" id="slicer-product"></div>
                 <div class="slicer" id="slicer-manager"></div>
+                <div class="slicer" id="slicer-quality"></div>
+                <div class="slicer" id="slicer-food"></div>
                 <button class="btn-reset" onclick="resetFilters()">RESET</button>
             </section>
 

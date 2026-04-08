@@ -182,7 +182,8 @@ def fetch_and_parse_chunk(template_id, chunk_start, chunk_end):
                         "مدى الاجراء المتخذ": answers_dict.get("مدى الاجراء المتخذ", ""),
                         "مصدر الشكوى": answers_dict.get("مصدر الشكوى", ""),
                         "تم الطلب من خلال": answers_dict.get("تم الطلب من خلال", ""),
-                        "قيمة التعويض": answers_dict.get("قيمة التعويض", ""), 
+                        "قيمة التعويض": answers_dict.get("قيمة التعويض", ""),
+                        "في حال كانت الشكوى تخص التلوث الغذائي (السلامة الغذائية) يرجى اختيار الكود": answers_dict.get("في حال كانت الشكوى تخص التلوث الغذائي (السلامة الغذائية) يرجى اختيار الكود", ""),
                     }
                     parsed_rows.append(row)
                 except Exception:
@@ -304,7 +305,6 @@ def update_google_sheet(new_df, existing_df, worksheet):
     if 'INDEX' in final_df.columns:
         final_df.drop(columns=['INDEX'], inplace=True)
     
-    # Cumulative sum logic keeps INDEX exactly the same for rows sharing a Submission_ID
     submission_indices = (~final_df['Submission_ID'].duplicated()).cumsum()
     final_df.insert(0, 'INDEX', submission_indices)
     

@@ -97,7 +97,7 @@ body {
    ========================================================== */
 .filters-bar {
     display: grid;
-    grid-template-columns: repeat(5, 1fr) 120px;
+    grid-template-columns: 1.2fr repeat(6, 1fr) 100px;
     gap: 16px;
     background: #1e1e1e;
     padding: 20px;
@@ -608,7 +608,7 @@ tr:hover td { background: #242424; }
    ========================================================== */
 .comp-filters-bar {
     display: grid;
-    grid-template-columns: repeat(4, 1fr) auto;
+    grid-template-columns: repeat(6, 1fr) auto;
     gap: 12px;
     background: #1a1a1a;
     border: 1px solid #2a2a2a;

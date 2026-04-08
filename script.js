@@ -13,7 +13,9 @@ const multiSelectState = {
     branchSlicer: new Set(),
     typeSlicer: new Set(),
     productSlicer: new Set(),
-    managerSlicer: new Set()
+    managerSlicer: new Set(),
+    qualitySlicer: new Set(),
+    foodSlicer: new Set()
 };
 
 // Comparison modal filter state (separate from main filters)
@@ -21,14 +23,18 @@ const compFilterState = {
     branch: new Set(),
     type: new Set(),
     product: new Set(),
-    manager: new Set()
+    manager: new Set(),
+    quality: new Set(),
+    food: new Set()
 };
 
 const slicerConfigs = [
     { id: 'branchSlicer',   column: 'اختر الفرع',              label: 'جميع الفروع', labelText: 'الفرع',         containerId: 'slicer-branch',   filterBranch: true },
     { id: 'typeSlicer',     column: 'نوع الشكوى',              label: 'الكل',        labelText: 'نوع الشكوى',    containerId: 'slicer-type' },
     { id: 'productSlicer',  column: 'الشكوى على اي منتج؟',    label: 'الكل',        labelText: 'المنتج',         containerId: 'slicer-product' },
-    { id: 'managerSlicer',  column: 'مدير المنطقة المسؤول',   label: 'الكل',        labelText: 'مدير المنطقة',  containerId: 'slicer-manager' }
+    { id: 'managerSlicer',  column: 'مدير المنطقة المسؤول',                                                                    label: 'الكل', labelText: 'مدير المنطقة',       containerId: 'slicer-manager' },
+    { id: 'qualitySlicer', column: 'فى حاله كانت الشكوى جوده برجاء تحديد نوع الشكوى',                                              label: 'الكل', labelText: 'نوع شكوى الجودة',    containerId: 'slicer-quality', excludeValues: ['لا علاقة لها بالجودة'] },
+    { id: 'foodSlicer',    column: 'في حال كانت الشكوى تخص التلوث الغذائي (السلامة الغذائية) يرجى اختيار الكود',                   label: 'الكل', labelText: 'كود السلامة الغذائية', containerId: 'slicer-food' }
 ];
 
 // =============================================
@@ -146,7 +152,7 @@ function updateMsLabel(id) {
     var el = document.getElementById('label-' + id);
     if (!el) return;
     var count = multiSelectState[id].size;
-    var defaults = { branchSlicer:'جميع الفروع', typeSlicer:'الكل', productSlicer:'الكل', managerSlicer:'الكل' };
+    var defaults = { branchSlicer:'جميع الفروع', typeSlicer:'الكل', productSlicer:'الكل', managerSlicer:'الكل', qualitySlicer:'الكل', foodSlicer:'الكل' };
     el.textContent = count === 0 ? defaults[id] : ('تم اختيار ' + count + ' عنصر');
     el.style.color = count > 0 ? '#d32f2f' : '';
 }
@@ -173,6 +179,7 @@ function populateSlicers(data) {
         var unique = [...new Set(data.map(function(item) { return item[conf.column]; }))].filter(function(val) {
             if (!val) return false;
             if (conf.filterBranch) return isNaN(val);
+            if (conf.excludeValues && conf.excludeValues.includes(val)) return false;
             return true;
         });
         populateMsOptions(conf.id, unique);
@@ -433,7 +440,9 @@ var compFilterSlicers = [
     { key: 'branch',   column: 'اختر الفرع',            label: 'جميع الفروع', labelText: 'الفرع',        filterBranch: true },
     { key: 'type',     column: 'نوع الشكوى',            label: 'الكل',        labelText: 'نوع الشكوى' },
     { key: 'product',  column: 'الشكوى على اي منتج؟',  label: 'الكل',        labelText: 'المنتج' },
-    { key: 'manager',  column: 'مدير المنطقة المسؤول', label: 'الكل',        labelText: 'مدير المنطقة' }
+    { key: 'manager',  column: 'مدير المنطقة المسؤول',                                                                    label: 'الكل', labelText: 'مدير المنطقة' },
+    { key: 'quality',  column: 'فى حاله كانت الشكوى جوده برجاء تحديد نوع الشكوى',                                              label: 'الكل', labelText: 'نوع شكوى الجودة',    excludeValues: ['لا علاقة لها بالجودة'] },
+    { key: 'food',     column: 'في حال كانت الشكوى تخص التلوث الغذائي (السلامة الغذائية) يرجى اختيار الكود',                   label: 'الكل', labelText: 'كود السلامة الغذائية' }
 ];
 
 function buildCompMsHTML(key, label) {
@@ -492,6 +501,7 @@ function buildCompFiltersHTML() {
         var unique = [...new Set(originalData.map(function(item){ return item[conf.column]; }))].filter(function(val){
             if (!val) return false;
             if (conf.filterBranch) return isNaN(val);
+            if (conf.excludeValues && conf.excludeValues.includes(val)) return false;
             return true;
         }).sort();
         html += '<div class="comp-filter-slicer">';
