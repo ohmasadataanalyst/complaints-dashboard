@@ -161,7 +161,7 @@ def fetch_and_parse_chunk(template_id, chunk_start, chunk_end):
 
             batch = resp.json().get("data", [])
             if not batch:
-                break 
+                break
 
             for s in batch:
                 try:
@@ -170,6 +170,9 @@ def fetch_and_parse_chunk(template_id, chunk_start, chunk_end):
                     answers_dict = {ans["title"]: ans.get("value") for ans in s.get("answers", [])}
                     raw_branch_code = str(answers_dict.get("اختر الفرع", "")).strip()
 
+                    # Full datetime string from the API (e.g. "2025-03-15 14:32:00")
+                    raw_datetime = sm.get("date_submitted_local", "")
+
                     row = {
                         "Submission_ID": sub_id,
                         "اختر الفرع": BRANCH_MAP.get(raw_branch_code, raw_branch_code),
@@ -177,20 +180,25 @@ def fetch_and_parse_chunk(template_id, chunk_start, chunk_end):
                         "نوع الشكوى": answers_dict.get("نوع الشكوى"),
                         "فى حاله كانت الشكوى جوده برجاء تحديد نوع الشكوى": answers_dict.get("فى حاله كانت الشكوى جوده برجاء تحديد نوع الشكوى"),
                         "الشكوى على اي منتج؟": answers_dict.get("الشكوى على اي منتج؟"),
-                        "التاريخ": sm.get("date_submitted_local", ""),
+                        # ✅ Now stores full datetime: "2025-03-15 14:32:00"
+                        "التاريخ": raw_datetime,
+                        # ✅ New column: same full datetime value
+                        "وقت وتاريخ الطلب": raw_datetime,
                         "مدير المنطقة المسؤول": answers_dict.get("مدير المنطقة المسؤول", ""),
                         "مدى الاجراء المتخذ": answers_dict.get("مدى الاجراء المتخذ", ""),
                         "مصدر الشكوى": answers_dict.get("مصدر الشكوى", ""),
                         "تم الطلب من خلال": answers_dict.get("تم الطلب من خلال", ""),
                         "قيمة التعويض": answers_dict.get("قيمة التعويض", ""),
                         "في حال كانت الشكوى تخص التلوث الغذائي (السلامة الغذائية) يرجى اختيار الكود": answers_dict.get("في حال كانت الشكوى تخص التلوث الغذائي (السلامة الغذائية) يرجى اختيار الكود", ""),
+                        # ✅ New column: pulled from answers, empty → filled with "لا" in process_dataframe
+                        "الشكوى تلزم زيارة الفرع من فريق الجودة": answers_dict.get("الشكوى تلزم زيارة الفرع من فريق الجودة", ""),
                     }
                     parsed_rows.append(row)
                 except Exception:
                     continue
-            
+
             del batch
-            
+
             start += limit
             if start >= 9900:
                 break
@@ -198,15 +206,15 @@ def fetch_and_parse_chunk(template_id, chunk_start, chunk_end):
         except Exception as e:
             print(f"⚠️ Network timeout on {chunk_start[:10]}")
             break
-            
+
     return parsed_rows
 
 def fetch_submissions_optimized(template_id, start_date):
     print(f"⚡ Fetching submissions from {start_date} using MEMORY-SAFE MULTITHREADING...")
-    
+
     start_dt = pd.to_datetime(start_date)
     now_dt = pd.Timestamp.now()
-    
+
     chunks = []
     curr_dt = start_dt
     while curr_dt < now_dt:
@@ -220,7 +228,7 @@ def fetch_submissions_optimized(template_id, start_date):
         curr_dt = next_dt
 
     all_parsed_rows = []
-    
+
     with ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
         future_to_chunk = {executor.submit(fetch_and_parse_chunk, template_id, c[0], c[1]): c for c in chunks}
         for future in as_completed(future_to_chunk):
@@ -229,8 +237,8 @@ def fetch_submissions_optimized(template_id, start_date):
                 data = future.result()
                 all_parsed_rows.extend(data)
                 print(f"✅ Extracted {len(data)} records for: {chunk[0][:10]} to {chunk[1][:10]}")
-                del data 
-                gc.collect() 
+                del data
+                gc.collect()
             except Exception as e:
                 print(f"❌ Chunk {chunk[0][:10]} failed: {e}")
 
@@ -242,7 +250,6 @@ def process_dataframe(rows_list):
         return pd.DataFrame()
 
     df = pd.DataFrame(rows_list)
-    
     df = df.drop_duplicates(subset=['Submission_ID'])
 
     def clean_value(value):
@@ -255,11 +262,19 @@ def process_dataframe(rows_list):
     for col in df.columns:
         df[col] = df[col].apply(clean_value)
 
-    df['التاريخ'] = pd.to_datetime(df['التاريخ'], errors='coerce').dt.strftime('%Y-%m-%d')
-    
+    # ✅ التاريخ: keep full datetime (date + time)
+    df['التاريخ'] = pd.to_datetime(df['التاريخ'], errors='coerce').dt.strftime('%Y-%m-%d %H:%M:%S')
+
+    # ✅ وقت وتاريخ الطلب: same full datetime
+    df['وقت وتاريخ الطلب'] = pd.to_datetime(df['وقت وتاريخ الطلب'], errors='coerce').dt.strftime('%Y-%m-%d %H:%M:%S')
+
     df['مدى الاجراء المتخذ'] = df['مدى الاجراء المتخذ'].apply(lambda x: x.split(',')[0].strip())
     df['مدى الاجراء المتخذ'] = df['مدى الاجراء المتخذ'].replace('', 'لم يتم المراجعة')
     df['قيمة التعويض'] = pd.to_numeric(df['قيمة التعويض'], errors='coerce').fillna(0)
+
+    # ✅ Fill empty "quality visit" column with "لا"
+    visit_col = 'الشكوى تلزم زيارة الفرع من فريق الجودة'
+    df[visit_col] = df[visit_col].replace('', 'لا').fillna('لا')
 
     cols_to_explode = [
         'نوع الشكوى',
@@ -281,16 +296,16 @@ def process_dataframe(rows_list):
 
 def update_google_sheet(new_df, existing_df, worksheet):
     print("ℹ️ Resolving edits and merging data...")
-    
+
     if not existing_df.empty and 'Submission_ID' in existing_df.columns:
         existing_df['Submission_ID'] = existing_df['Submission_ID'].astype(str).str.replace(r'\.0$', '', regex=True).str.strip()
-        
+
         columns_to_check = [col for col in existing_df.columns if col != 'INDEX']
         existing_df = existing_df.drop_duplicates(subset=columns_to_check)
 
         fetched_ids = set(new_df['Submission_ID'])
         existing_df = existing_df[~existing_df['Submission_ID'].isin(fetched_ids)]
-        
+
         final_df = pd.concat([existing_df, new_df], ignore_index=True)
         del existing_df
         del new_df
@@ -298,16 +313,17 @@ def update_google_sheet(new_df, existing_df, worksheet):
     else:
         final_df = new_df
 
+    # ✅ Sort by full datetime in التاريخ (now includes time)
     final_df['TempDate'] = pd.to_datetime(final_df['التاريخ'], errors='coerce')
     final_df = final_df.sort_values(by=['TempDate', 'Submission_ID'])
     final_df.drop(columns=['TempDate'], inplace=True)
 
     if 'INDEX' in final_df.columns:
         final_df.drop(columns=['INDEX'], inplace=True)
-    
+
     submission_indices = (~final_df['Submission_ID'].duplicated()).cumsum()
     final_df.insert(0, 'INDEX', submission_indices)
-    
+
     df_for_gsheet = final_df.fillna('')
     del final_df
     gc.collect()
@@ -324,30 +340,31 @@ if __name__ == "__main__":
         print("ℹ️ Opening Google Sheet to check existing data...")
         spreadsheet = gsheet_client.open_by_key(GOOGLE_SHEET_ID)
         worksheet = spreadsheet.get_worksheet(0)
-        
+
         existing_df = get_as_dataframe(worksheet).dropna(how='all')
         gc.collect()
-        
+
         if not existing_df.empty and 'التاريخ' in existing_df.columns and 'Submission_ID' in existing_df.columns:
+            # ✅ Parse datetime correctly now that التاريخ includes time
             max_date_str = pd.to_datetime(existing_df['التاريخ'], errors='coerce').max().strftime('%Y-%m-%d')
             max_date = pd.to_datetime(max_date_str)
             thirty_days_ago = pd.Timestamp.now() - pd.Timedelta(days=30)
-            
+
             start_date_obj = min(thirty_days_ago, max_date)
             start_date_for_api = start_date_obj.strftime('%Y-%m-%d')
-            
+
             print(f"📅 Data found! Looking back to {start_date_for_api} to sync new records AND edits.")
         else:
             print("⚠️ Sheet is empty or missing structure. Fetching everything from 2025-01-01.")
-            existing_df = pd.DataFrame() 
+            existing_df = pd.DataFrame()
             start_date_for_api = "2025-01-01"
 
         raw_rows = fetch_submissions_optimized(TEMPLATE_ID, start_date_for_api)
-        
+
         new_df = process_dataframe(raw_rows)
         del raw_rows
         gc.collect()
-        
+
         if new_df.empty:
             print("ℹ️ No records found to process.")
         else:
