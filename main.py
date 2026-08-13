@@ -43,94 +43,79 @@ gsheet_client = get_gspread_client()
 print("✅ Authentication successful via GitHub Secrets!")
 
 # --- MAPPING CONFIGURATION ---
-RAW_BRANCH_MAPPING_DATA = """
-2197299 "LBRUH   B07"
-2239240 FYJED  B32
-2235670 "ANRUH   B31"
-2190657 "SLAHS   B23"
-2164026 "NDRUH   B15"
-2164019 "SWRUH   B08"
-2203271 "SARUH   B27"
-2164017 "DARUH   B06"
-2164032 "KRRUH   B21"
-2164031 "SFJED   B24"
-2164025 "RBRUH   B14"
-2164016 RWRUH B05
-2197297 "NSRUH   B04"
-2164021 "SHRUH   B10"
-2164013 "KHRUH   B02"
-2155652 "NURUH   B01"
-2164023 "TWRUH   B12"
-2164020 "AZRUH   B09"
-2199002 "RWAHS   B25"
-2242934 "HIRJED      B33"
-2164022 "NRRUH   B11"
-2164030 "MURUH   B19"
-2164014 "GHRUH   B03"
-2211854 QARUH B30
-2169459 "Lubda  Alaqeq Branch    LB01"
-2254072 Garatiss QB03
-2256386 Garatiss QB04
-2232755 Garatis As Suwaidi - قراطيس السويدي   QB01
-2258220 PSJED   B36
-2185452 "OBJED   B22"
-2243963 URRUH B34
-2222802 "Lubda Alkhaleej Branch      LB02"
-2199835 "HAJED   B26"
-2210205 "MAJED   B28"
-2250799 IRRUH B35
-2164027 "BDRUH   B16"
-2155654 "AQRUH   B13"
-2197298 "TKRUH   B18"
-2239240 "FAYJED      B32"
-2250799 IRRUH35
-2211854 "QADRUH      B30"
-2243963 "URURUH      B34"
-2239240 "FAYJED      B32"
-2164017 Aldaraiah - الدرعية
-2203271 Alsaadah branch - فرع السعادة
-2155654 Al Aqeeq - العقيق
-2164032 Alkharj - الخرج
-2190657 Al Sulimaniyah Al Hofuf - السلمانية الهفوف
-2211854 Al Qadisiyyah branch - فرع القادسية
-2164013 Alkaleej - الخليج
-2164027 Albadeah - البديعة
-2171883 Twesste - تويستي TW01
-2235805 Garatis Alnargis -  قراطيس النرجس  QB02
-2164016 "RAWRUH      B05"
-2164028 "QRRUH B17"
-2257790 SHWMAK B37
-2260889 UHDMM B38
-2263062 HSRUH B39
-2268360 QB05
-"""
+# ONE canonical name per Zenput location ID. A dict cannot hold duplicate keys,
+# so the old "FYJED B32 / FAYJED B32" style overwrites are structurally impossible.
+LOCATION_MAP = {
+    "2155652": "NURUH B01",   "2164013": "KHRUH B02",   "2164014": "GHRUH B03",
+    "2197297": "NSRUH B04",   "2164016": "RWRUH B05",   "2164017": "DARUH B06",
+    "2197299": "LBRUH B07",   "2164019": "SWRUH B08",   "2164020": "AZRUH B09",
+    "2164021": "SHRUH B10",   "2164022": "NRRUH B11",   "2164023": "TWRUH B12",
+    "2155654": "AQRUH B13",   "2164025": "RBRUH B14",   "2164026": "NDRUH B15",
+    "2164027": "BDRUH B16",   "2164028": "QRRUH B17",   "2197298": "TKRUH B18",
+    "2164030": "MURUH B19",   "2164032": "KRRUH B21",   "2185452": "OBJED B22",
+    "2190657": "SLAHS B23",   "2164031": "SFJED B24",   "2199002": "RWAHS B25",
+    "2199835": "HAJED B26",   "2203271": "SARUH B27",   "2210205": "MAJED B28",
+    "2211854": "QARUH B30",   "2235670": "ANRUH B31",   "2239240": "FYJED B32",
+    "2242934": "HIRJED B33",  "2243963": "URRUH B34",   "2250799": "IRRUH B35",
+    "2258220": "PSJED B36",   "2257790": "SHWMAK B37",  "2260889": "UHDMM B38",
+    "2263062": "HSRUH B39",
+    "2169459": "Lubda Alaqeq LB01",
+    "2222802": "Lubda Alkhaleej LB02",
+    "2232755": "Garatis As Suwaidi QB01",
+    "2235805": "Garatis Alnargis QB02",
+    "2254072": "Garatis QB03",
+    "2256386": "Garatis QB04",
+    "2268360": "Garatis QB05",
+    "2270650": "Garatis QB06",              # was missing -> raw ID leaked to sheet
+    "2274188": "Garatis QB07",              # was missing -> raw ID leaked to sheet
+    "2276794": "Garatis Almansoura QB08",   # was missing. Zenput labels it
+                                            # "Garatiss B08", which collides with
+                                            # Classic B08 (SWRUH / Alsweedi)
+    "2171883": "Twesste TW01",
+    "2175245": "Albawasiq factory NONBRANCH",
+    "2230615": "Centeral Kitchen NONBRANCH",
+    "2256173": "Al Hair WH NONBRANCH",
+}
 
-def create_branch_map_prioritized(raw_data):
-    branch_map = {}
-    lines = raw_data.strip().split('\n')
-    code_pattern = re.compile(r'\b[A-Z]{1,3}[0-9]{1,2}\b')
-    for line in lines:
-        line = line.strip()
-        if not line: continue
-        parts = line.split(None, 1)
-        if len(parts) == 2:
-            code, branch_name = parts
-            cleaned_name = ' '.join(branch_name.strip().strip('"').split())
-            if code_pattern.search(cleaned_name):
-                branch_map[code.strip()] = cleaned_name
-    for line in lines:
-        line = line.strip()
-        if not line: continue
-        parts = line.split(None, 1)
-        if len(parts) == 2:
-            code, branch_name = parts
-            code = code.strip()
-            if code not in branch_map:
-                cleaned_name = ' '.join(branch_name.strip().strip('"').split())
-                branch_map[code] = cleaned_name
-    return branch_map
+BRANCH_CODE_RE = re.compile(r"\b(LB\d+|QB\d+|TW\d+|B\d+)\b")
 
-BRANCH_MAP = create_branch_map_prioritized(RAW_BRANCH_MAPPING_DATA)
+# branch code -> canonical name, used to repair old spelling variants
+# already sitting in the sheet (FAYJED B32 -> FYJED B32, QADRUH B30 -> QARUH B30)
+CODE_TO_NAME = {}
+for _loc_id, _loc_name in LOCATION_MAP.items():
+    _m = BRANCH_CODE_RE.search(_loc_name.upper())
+    if _m:
+        CODE_TO_NAME[_m.group(0)] = _loc_name
+
+# text that the branch code alone cannot disambiguate
+NAME_ALIASES = {"garatiss b08": "QB08", "garatis b08": "QB08"}
+
+UNMAPPED_IDS = set()
+
+
+def resolve_branch(raw_value):
+    """Zenput location ID (or a legacy sheet string) -> one canonical branch name."""
+    raw = " ".join(str(raw_value or "").split()).strip()
+    if not raw:
+        return ""
+
+    if raw in LOCATION_MAP:                       # normal path: ID -> name
+        return LOCATION_MAP[raw]
+
+    if raw.isdigit():                             # new store: fail loudly
+        UNMAPPED_IDS.add(raw)
+        return f"UNMAPPED-{raw}"
+
+    low = raw.lower()                             # legacy text rows
+    for pattern, code in NAME_ALIASES.items():
+        if pattern in low:
+            return CODE_TO_NAME.get(code, raw)
+
+    match = BRANCH_CODE_RE.search(raw.upper())
+    if match:
+        return CODE_TO_NAME.get(match.group(0), raw)
+    return raw
+
 
 def zenput_headers():
     return {"X-API-TOKEN": API_KEY, "Content-Type": "application/json"}
@@ -175,7 +160,8 @@ def fetch_and_parse_chunk(template_id, chunk_start, chunk_end):
 
                     row = {
                         "Submission_ID": sub_id,
-                        "اختر الفرع": BRANCH_MAP.get(raw_branch_code, raw_branch_code),
+                        # ✅ resolves the location ID, and flags anything unmapped
+                        "اختر الفرع": resolve_branch(raw_branch_code),
                         "محتوى شكوى العميل": answers_dict.get("محتوى شكوى العميل", ""),
                         "نوع الشكوى": answers_dict.get("نوع الشكوى"),
                         "فى حاله كانت الشكوى جوده برجاء تحديد نوع الشكوى": answers_dict.get("فى حاله كانت الشكوى جوده برجاء تحديد نوع الشكوى"),
@@ -294,6 +280,34 @@ def process_dataframe(rows_list):
     gc.collect()
     return df.reset_index(drop=True)
 
+def normalize_branch_column(final_df):
+    """
+    Re-resolve اختر الفرع across the WHOLE dataset, not just the last 30 days.
+    The sheet is cleared and rewritten below, so one run repairs history:
+    bare location IDs and legacy spelling variants both collapse to one name.
+    """
+    if 'اختر الفرع' not in final_df.columns:
+        return final_df
+
+    before = final_df['اختر الفرع'].astype(str).copy()
+    final_df['اختر الفرع'] = before.apply(resolve_branch)
+
+    changed = before != final_df['اختر الفرع']
+    if changed.any():
+        print(f"🔧 Normalized {int(changed.sum())} branch values:")
+        pairs = pd.DataFrame({
+            'old': before[changed],
+            'new': final_df.loc[changed, 'اختر الفرع']
+        }).value_counts().head(30)
+        for (old, new), n in pairs.items():
+            print(f"     {old!r} -> {new!r}  ({n} rows)")
+
+    if UNMAPPED_IDS:
+        print("🚨 UNMAPPED Zenput location IDs — add them to LOCATION_MAP: "
+              f"{sorted(UNMAPPED_IDS)}")
+
+    return final_df
+
 def update_google_sheet(new_df, existing_df, worksheet):
     print("ℹ️ Resolving edits and merging data...")
 
@@ -312,6 +326,9 @@ def update_google_sheet(new_df, existing_df, worksheet):
         gc.collect()
     else:
         final_df = new_df
+
+    # ✅ Repair branch names across every row, including historical ones
+    final_df = normalize_branch_column(final_df)
 
     # ✅ Sort by full datetime in التاريخ (now includes time)
     final_df['TempDate'] = pd.to_datetime(final_df['التاريخ'], errors='coerce')
