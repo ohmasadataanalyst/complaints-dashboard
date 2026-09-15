@@ -59,6 +59,7 @@ LOCATION_MAP = {
     "2242934": "HIRJED B33",  "2243963": "URRUH B34",   "2250799": "IRRUH B35",
     "2258220": "PSJED B36",   "2257790": "SHWMAK B37",  "2260889": "UHDMM B38",
     "2263062": "HSRUH B39",
+    "2281339": "MZDMM B40",                 # NEW branch
     "2169459": "Lubda Alaqeq LB01",
     "2222802": "Lubda Alkhaleej LB02",
     "2232755": "Garatis As Suwaidi QB01",
@@ -98,6 +99,10 @@ def resolve_branch(raw_value):
     raw = " ".join(str(raw_value or "").split()).strip()
     if not raw:
         return ""
+
+    # repair rows written as "UNMAPPED-<id>" by earlier runs, once the ID is mapped
+    if raw.upper().startswith("UNMAPPED-"):
+        raw = raw.split("-", 1)[1].strip()
 
     if raw in LOCATION_MAP:                       # normal path: ID -> name
         return LOCATION_MAP[raw]
@@ -284,7 +289,8 @@ def normalize_branch_column(final_df):
     """
     Re-resolve اختر الفرع across the WHOLE dataset, not just the last 30 days.
     The sheet is cleared and rewritten below, so one run repairs history:
-    bare location IDs and legacy spelling variants both collapse to one name.
+    bare location IDs, UNMAPPED-<id> placeholders and legacy spelling
+    variants all collapse to one name.
     """
     if 'اختر الفرع' not in final_df.columns:
         return final_df
