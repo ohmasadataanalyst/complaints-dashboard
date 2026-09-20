@@ -1,9 +1,6 @@
 name: Complain Daily update 
 
 on:
-  schedule:
-    # الكود ده بيشغله الساعة 5:00 الصبح بتوقيت جرينتش (8:00 صباحاً بتوقيت الرياض)
-    - cron: '0 5 * * *'
   workflow_dispatch: 
 
 jobs:
