@@ -5,7 +5,7 @@ import sys
 import pandas as pd
 import gspread
 import re
-import gc  
+import gc
 from gspread_dataframe import set_with_dataframe, get_as_dataframe
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from google.oauth2.service_account import Credentials
@@ -20,7 +20,7 @@ if not API_KEY:
 # --- CONFIGURATION ---
 TEMPLATE_ID = 512247
 GOOGLE_SHEET_ID = "1avAzf7ROjVAy43_yDTfppUAhg6JdM191_wGeLOfICWA"
-MAX_THREADS = 5  
+MAX_THREADS = 5
 
 # --- AUTHENTICATION SETUP FOR GITHUB ACTIONS ---
 def get_gspread_client():
@@ -59,7 +59,8 @@ LOCATION_MAP = {
     "2242934": "HIRJED B33",  "2243963": "URRUH B34",   "2250799": "IRRUH B35",
     "2258220": "PSJED B36",   "2257790": "SHWMAK B37",  "2260889": "UHDMM B38",
     "2263062": "HSRUH B39",
-    "2281339": "MZDMM B40",                 # NEW branch
+    "2281339": "MZDMM B40",                 # new branch
+    "2283017": "AQKBR B41",                 # NEW branch — was leaking as UNMAPPED-2283017
     "2169459": "Lubda Alaqeq LB01",
     "2222802": "Lubda Alkhaleej LB02",
     "2232755": "Garatis As Suwaidi QB01",
@@ -72,6 +73,7 @@ LOCATION_MAP = {
     "2276794": "Garatis Almansoura QB08",   # was missing. Zenput labels it
                                             # "Garatiss B08", which collides with
                                             # Classic B08 (SWRUH / Alsweedi)
+    "2282774": "Garatis Alnuzha QB09",      # NEW branch (النزهة) — was missing
     "2171883": "Twesste TW01",
     "2175245": "Albawasiq factory NONBRANCH",
     "2230615": "Centeral Kitchen NONBRANCH",
